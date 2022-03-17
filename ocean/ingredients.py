@@ -4,6 +4,8 @@ import dataclasses
 import dataclasses_json
 import uuid
 
+from ocean import types
+
 
 @dataclasses.dataclass
 class Ingredient(dataclasses_json.DataClassJsonMixin):
@@ -14,25 +16,25 @@ class Ingredient(dataclasses_json.DataClassJsonMixin):
 
 @dataclasses.dataclass
 class Event(Ingredient):
-    data: dict
+    content: dict
     loop_id: str | uuid.UUID = dataclasses.field(default_factory=uuid.uuid4)
 
 
 @dataclasses.dataclass
 class Features(Ingredient):
-    data: dict
+    content: dict
     model_name: str
     loop_id: str | uuid.UUID
 
 
 @dataclasses.dataclass
 class Prediction(Ingredient):
-    data: dict[str | bool, float] | int | float
+    content: dict[types.ClfLabel, float] | types.RegLabel
     model_name: str
     loop_id: str | uuid.UUID
 
 
 @dataclasses.dataclass
 class Label(Ingredient):
-    data: str | bool | int | float
+    content: types.Label
     loop_id: str | uuid.UUID

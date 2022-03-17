@@ -55,11 +55,11 @@ class ShelveDataStore(DataStore):
 
     >>> import ocean
 
-    >>> data_store = ocean.data_store.ShelveDataStore("cookie_jar")
+    >>> data_store = ocean.data_store.ShelveDataStore("data_jar")
 
     >>> event = ocean.Event({"foo": 42})
     >>> data_store.store_event(event)
-    >>> data_store.get_event(event.loop_id).data
+    >>> data_store.get_event(event.loop_id).content
     {'foo': 42}
 
     >>> data_store.clear()
