@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "ocean"
+version = "0.1.0"
+description = "MLOps for online machine learning"
+authors = ["Max Halford <maxhalford25@gmail.com>"]
+license = "BSD-3"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+dataclasses-json = "^0.5.6"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
