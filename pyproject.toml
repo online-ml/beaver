@@ -8,6 +8,7 @@ license = "BSD-3"
 [tool.poetry.dependencies]
 python = "^3.9"
 dataclasses-json = "^0.5.6"
+SQLAlchemy = "^1.4.32"
 
 [tool.poetry.dev-dependencies]
 

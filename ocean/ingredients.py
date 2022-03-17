@@ -1,8 +1,8 @@
-from __future__ import annotations
 import datetime as dt
 import dataclasses
 import dataclasses_json
 import uuid
+from typing import Union
 
 from ocean import types
 
@@ -17,24 +17,24 @@ class Ingredient(dataclasses_json.DataClassJsonMixin):
 @dataclasses.dataclass
 class Event(Ingredient):
     content: dict
-    loop_id: str | uuid.UUID = dataclasses.field(default_factory=uuid.uuid4)
+    loop_id: Union[str, uuid.UUID] = dataclasses.field(default_factory=uuid.uuid4)
 
 
 @dataclasses.dataclass
 class Features(Ingredient):
     content: dict
     model_name: str
-    loop_id: str | uuid.UUID
+    loop_id: Union[str, uuid.UUID]
 
 
 @dataclasses.dataclass
 class Prediction(Ingredient):
-    content: dict[types.ClfLabel, float] | types.RegLabel
+    content: Union[dict[types.ClfLabel, float], types.RegLabel]
     model_name: str
-    loop_id: str | uuid.UUID
+    loop_id: Union[str, uuid.UUID]
 
 
 @dataclasses.dataclass
 class Label(Ingredient):
     content: types.Label
-    loop_id: str | uuid.UUID
+    loop_id: Union[str, uuid.UUID]
