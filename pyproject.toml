@@ -9,8 +9,13 @@ license = "BSD-3"
 python = "^3.9"
 dataclasses-json = "^0.5.6"
 SQLAlchemy = "^1.4.32"
+fastapi = "^0.75.0"
+uvicorn = "^0.17.6"
+pydantic = "^1.9.0"
+python-multipart = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
+black = {version = "^22.3.0", allow-prereleases = true}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

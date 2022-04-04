@@ -28,6 +28,10 @@ class ModelStore(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def get_all(self):
+        ...
+
+    @abc.abstractmethod
     def get(self, sku: uuid.UUID) -> ModelEnvelope:
         ...
 
@@ -71,6 +75,10 @@ class ShelveModelStore(ModelStore):
     def store(self, envelope):
         with self.db() as db:
             db[str(envelope.sku)] = envelope
+
+    def get_all(self):
+        with self.db() as db:
+            return [self.get(sku) for sku in db.keys()]
 
     def get(self, sku):
         with self.db() as db:

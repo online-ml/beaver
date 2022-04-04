@@ -3,7 +3,6 @@ import abc
 import contextlib
 import uuid
 import pathlib
-import shelve
 
 import ocean
 
@@ -48,81 +47,23 @@ class DataStore(abc.ABC):
         raise NotImplementedError
 
 
-class ShelveDataStore(DataStore):
-    """
-
-    >>> import ocean
-
-    >>> data_store = ocean.data_store.ShelveDataStore("data_jar")
-
-    >>> event = ocean.Event({"foo": 42})
-    >>> data_store.store_event(event)
-    >>> data_store.get_event(event.loop_id).content
-    {'foo': 42}
-
-    >>> data_store.clear()
-    >>> try:
-    ...     data_store.get_event(event.loop_id)
-    ... except KeyError:
-    ...     print("Key doesn't exist")
-    Key doesn't exist
-
-    """
-
-    def __init__(self, path):
-        self.path = pathlib.Path(path)
-
-    @contextlib.contextmanager
-    def db(self, *args, **kwds):
-        db = shelve.open(str(self.path))
-        try:
-            yield db
-        finally:
-            db.close()
-
-    def store(self, kind, ingredient):
-        with self.db() as db:
-            db[f"{kind}/{ingredient.loop_id}"] = ingredient
-
-    def get(self, kind, loop_id):
-        with self.db() as db:
-            return db[f"{kind}/{loop_id}"]
-
-    def clear(self):
-        pathlib.Path(str(self.path) + ".db").unlink()
-
-
 import sqlalchemy as sqla
 import sqlalchemy.orm
 
 Base = sqlalchemy.orm.declarative_base()
 
 
-class Ingredient(Base):
-    __tablename__ = "ingredients"
-    kind = sqla.Column(sqla.Text(), primary_key=True)
+class Event(Base):
+    __tablename__ = "events"
     loop_id = sqla.Column(sqla.Text(), primary_key=True)
-    content = sqla.Column(sqla.JSON())
+    content = sqla.Column(sqla.Text())
 
     @classmethod
-    def from_dataclass(cls, ingredient: ocean.Ingredient):
-        return cls(
-            kind=ingredient.__class__.__name__.lower(),
-            loop_id=str(ingredient.loop_id),
-            content=ingredient.to_json(),
-        )
+    def from_dataclass(cls, event: ocean.Event):
+        return cls(loop_id=str(event.loop_id), content=event.to_json())
 
-    def to_ingredient(self):
-        dataclass = {
-            ingredient.__name__.lower(): ingredient
-            for ingredient in [
-                ocean.Event,
-                ocean.Features,
-                ocean.Prediction,
-                ocean.Label,
-            ]
-        }[self.kind]
-        return dataclass.from_json(self.content)
+    def to_dataclass(self):
+        return ocean.Event(loop_id=self.loop_id, content=self.content)
 
 
 class SQLDataStore(DataStore):
@@ -142,15 +83,16 @@ class SQLDataStore(DataStore):
             pass
 
     def store(self, kind, ingredient):
-        row = Ingredient.from_dataclass(ingredient)
+        row = {"event": Event}[kind].from_dataclass(ingredient)
         with self.session() as session:
             session.add(row)
 
     def get(self, kind, loop_id):
+        klass = {"event": Event}[kind]
         with self.session() as session:
             return (
-                session.query(Ingredient)
+                session.query(klass)
                 .filter_by(loop_id=str(loop_id))
                 .first()
-                .to_ingredient()
+                .to_dataclass()
             )

@@ -2,6 +2,10 @@
 
 🌊 MLOps for online machine learning
 
+```sh
+uvicorn ocean.api.server.main:app --reload
+```
+
 ## Development
 
 ```sh
