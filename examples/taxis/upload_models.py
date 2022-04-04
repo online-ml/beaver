@@ -1,8 +1,8 @@
-import ocean
+import beaver
 from river import linear_model, preprocessing
 
 
-client = ocean.HTTPClient(host="http://127.0.0.1:8000")
+client = beaver.HTTPClient(host="http://127.0.0.1:8000")
 
 model = preprocessing.StandardScaler() | linear_model.LinearRegression()
 

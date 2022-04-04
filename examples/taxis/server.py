@@ -1,8 +1,8 @@
 import pathlib
-import ocean
+import beaver
 
-app = ocean.App(
-    model_store=ocean.model_store.ShelveModelStore(
+app = beaver.App(
+    model_store=beaver.model_store.ShelveModelStore(
         path=pathlib.Path.home() / "Downloads"
     )
 )

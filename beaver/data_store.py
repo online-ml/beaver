@@ -4,7 +4,7 @@ import contextlib
 import uuid
 import pathlib
 
-import ocean
+import beaver
 
 
 class DataStore(abc.ABC):
@@ -12,19 +12,19 @@ class DataStore(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def store(self, kind: str, ingredient: ocean.Ingredient):
+    def store(self, kind: str, ingredient: beaver.Ingredient):
         ...
 
-    def store_event(self, event: ocean.Event):
+    def store_event(self, event: beaver.Event):
         return self.store("event", event)
 
-    def store_features(self, features: ocean.Features):
+    def store_features(self, features: beaver.Features):
         return self.store("features", features)
 
-    def store_prediction(self, prediction: ocean.Prediction):
+    def store_prediction(self, prediction: beaver.Prediction):
         return self.store("prediction", prediction)
 
-    def store_label(self, label: ocean.Label):
+    def store_label(self, label: beaver.Label):
         return self.store("label", label)
 
     @abc.abstractmethod
@@ -59,11 +59,11 @@ class Event(Base):
     content = sqla.Column(sqla.Text())
 
     @classmethod
-    def from_dataclass(cls, event: ocean.Event):
+    def from_dataclass(cls, event: beaver.Event):
         return cls(loop_id=str(event.loop_id), content=event.to_json())
 
     def to_dataclass(self):
-        return ocean.Event(loop_id=self.loop_id, content=self.content)
+        return beaver.Event(loop_id=self.loop_id, content=self.content)
 
 
 class SQLDataStore(DataStore):

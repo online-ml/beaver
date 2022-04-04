@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ocean"
+name = "beaver"
 version = "0.1.0"
 description = "MLOps for online machine learning"
 authors = ["Max Halford <maxhalford25@gmail.com>"]

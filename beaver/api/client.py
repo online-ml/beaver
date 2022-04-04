@@ -1,4 +1,4 @@
-from ocean.model import Model
+from beaver.model import Model
 import urllib.parse
 import dill
 import requests

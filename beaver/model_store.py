@@ -8,7 +8,7 @@ import dataclasses_json
 from typing import Optional
 import uuid
 
-import ocean
+import beaver
 
 
 @dataclasses.dataclass
@@ -42,12 +42,12 @@ class ModelStore(abc.ABC):
 class ShelveModelStore(ModelStore):
     """
 
-    >>> import ocean
+    >>> import beaver
     >>> import uuid
 
-    >>> model_store = ocean.model_store.ShelveModelStore("model_jar")
+    >>> model_store = beaver.model_store.ShelveModelStore("model_jar")
 
-    >>> envelope = ocean.ModelEnvelope("foo")
+    >>> envelope = beaver.ModelEnvelope("foo")
     >>> model_store.store(envelope)
     >>> model_store.get(envelope.sku).name
     'foo'

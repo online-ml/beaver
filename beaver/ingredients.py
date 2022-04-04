@@ -4,7 +4,7 @@ import dataclasses_json
 import uuid
 from typing import Union
 
-from ocean import types
+from beaver import types
 
 
 @dataclasses.dataclass

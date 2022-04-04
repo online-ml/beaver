@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Protocol
 
-from ocean import types
+from beaver import types
 
 
 class Model(Protocol):
