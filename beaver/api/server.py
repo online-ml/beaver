@@ -1,13 +1,15 @@
 import functools
+import dill
 from fastapi import Depends, File, Form, FastAPI
 import pydantic
 import beaver
+import base64
 
 api = FastAPI()
 
 
 class Settings(pydantic.BaseSettings):
-    beaver_app: beaver.App = None
+    app: beaver.App = None
 
 
 @functools.lru_cache()
@@ -15,27 +17,28 @@ def get_settings():
     return Settings()
 
 
+def deserialize_model(model_bytes):
+    return dill.dumps(base64.b64decode(model_bytes.encode("ascii")))
+
+
 @api.post("/models/")
-async def upload_model(
+async def post_model(
     name: str = Form(...),
-    model_bytes: bytes = File(...),
+    model_bytes: str = File(...),
     settings: Settings = Depends(get_settings),
 ):
-    envelope = beaver.model_store.ModelEnvelope(name=name, model_bytes=model_bytes)
-    settings.beaver_app.model_store.store(envelope)
+    model = deserialize_model(model_bytes)
+    settings.app.store_model(name, model)
 
 
-class ModelView(pydantic.BaseModel):
-    name: str
-    sku: str
+@api.delete("/models/{name}")
+async def delete_model(name: str, settings: Settings = Depends(get_settings)):
+    settings.app.model_store.delete(name)
 
 
 @api.get("/models/")
-async def list_models(settings: Settings = Depends(get_settings)):
-    return [
-        ModelView(name=envelope.name, sku=str(envelope.sku))
-        for envelope in settings.beaver_app.model_store.get_all()
-    ]
+async def get_models(settings: Settings = Depends(get_settings)):
+    return settings.app.model_store.list_names()
 
 
 # @api.post("/models/leader")

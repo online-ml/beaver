@@ -12,7 +12,7 @@ class DataStore(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def store(self, kind: str, ingredient: beaver.Ingredient):
+    def store(self, kind: str, loop_part: beaver.LoopPart):
         ...
 
     def store_event(self, event: beaver.Event):
@@ -82,8 +82,8 @@ class SQLDataStore(DataStore):
         finally:
             pass
 
-    def store(self, kind, ingredient):
-        row = {"event": Event}[kind].from_dataclass(ingredient)
+    def store(self, kind, loop_part):
+        row = {"event": Event}[kind].from_dataclass(loop_part)
         with self.session() as session:
             session.add(row)
 

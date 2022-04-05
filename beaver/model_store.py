@@ -3,20 +3,10 @@ import abc
 import contextlib
 import shelve
 import pathlib
-import dataclasses
-import dataclasses_json
 from typing import Optional
 import uuid
 
 import beaver
-
-
-@dataclasses.dataclass
-class ModelEnvelope(dataclasses_json.DataClassJsonMixin):
-    name: str
-    sku: uuid.UUID = dataclasses.field(default_factory=uuid.uuid4)
-    parent_sku: Optional[uuid.UUID] = None
-    model_bytes: Optional[bytes] = None
 
 
 class ModelStore(abc.ABC):
@@ -28,11 +18,15 @@ class ModelStore(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def get_all(self):
+    def list_names(self):
         ...
 
     @abc.abstractmethod
-    def get(self, sku: uuid.UUID) -> ModelEnvelope:
+    def get(self, name: str) -> Optional[ModelEnvelope]:
+        ...
+
+    @abc.abstractmethod
+    def delete(self, name: str):
         ...
 
     def clear(self):
@@ -74,15 +68,19 @@ class ShelveModelStore(ModelStore):
 
     def store(self, envelope):
         with self.db() as db:
-            db[str(envelope.sku)] = envelope
+            db[envelope.name] = envelope
 
-    def get_all(self):
+    def list_names(self):
         with self.db() as db:
-            return [self.get(sku) for sku in db.keys()]
+            return list(db.keys())
 
-    def get(self, sku):
+    def get(self, name):
         with self.db() as db:
-            return db[str(sku)]
+            return db.get(name)
+
+    def delete(self, name):
+        with self.db() as db:
+            db.pop(name, None)
 
     def clear(self):
         pathlib.Path(str(self.path) + ".db").unlink()
