@@ -18,7 +18,7 @@ def get_settings():
 
 
 def deserialize_model(model_bytes):
-    return dill.dumps(base64.b64decode(model_bytes.encode("ascii")))
+    return dill.loads(base64.b64decode(model_bytes.encode("ascii")))
 
 
 @api.post("/models/")
@@ -41,13 +41,22 @@ async def get_models(settings: Settings = Depends(get_settings)):
     return settings.app.model_store.list_names()
 
 
+class PredictEvent(pydantic.BaseModel):
+    event: dict
+
+
+@api.post("/predict/{model_name}")
+async def predict(
+    model_name: str,
+    predict_event: PredictEvent,
+    settings: Settings = Depends(get_settings),
+):
+    # TODO: the prediction is not JSON serializable because of created_at which is a datetime
+    return settings.app.predict(event=predict_event.event, model_name=model_name)
+
+
 # @api.post("/models/leader")
 # async def set_leader():
-#     ...
-
-
-# @api.get("/predict/")
-# async def predict():
 #     ...
 
 

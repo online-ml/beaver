@@ -36,6 +36,12 @@ class ModelsSDK(SDK):
         return self._request("GET", "models").json()
 
 
-class HTTPClient:
+class HTTPClient(SDK):
     def __init__(self, host):
+        super().__init__(host=host)
         self.models = ModelsSDK(host=host)
+
+    def predict(self, event, model_name):
+        return self._request(
+            "POST", f"predict/{model_name}", json={"event": event}
+        ).json()

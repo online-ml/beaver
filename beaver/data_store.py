@@ -5,10 +5,12 @@ import uuid
 import pathlib
 
 import beaver
+import sqlalchemy as sqla
+import sqlalchemy.orm
 
 
 class DataStore(abc.ABC):
-    def prepare(self):
+    def build(self):
         ...
 
     @abc.abstractmethod
@@ -47,30 +49,80 @@ class DataStore(abc.ABC):
         raise NotImplementedError
 
 
-import sqlalchemy as sqla
-import sqlalchemy.orm
-
 Base = sqlalchemy.orm.declarative_base()
 
 
 class Event(Base):
     __tablename__ = "events"
     loop_id = sqla.Column(sqla.Text(), primary_key=True)
-    content = sqla.Column(sqla.Text())
+    content = sqla.Column(sqla.JSON())
 
     @classmethod
     def from_dataclass(cls, event: beaver.Event):
-        return cls(loop_id=str(event.loop_id), content=event.to_json())
+        return cls(loop_id=str(event.loop_id), content=event.content)
 
     def to_dataclass(self):
         return beaver.Event(loop_id=self.loop_id, content=self.content)
+
+
+class Features(Base):
+    __tablename__ = "features"
+    loop_id = sqla.Column(sqla.Text(), primary_key=True)
+    content = sqla.Column(sqla.JSON())
+    model_name = sqla.Column(sqla.Text(), primary_key=True)
+
+    @classmethod
+    def from_dataclass(cls, features: beaver.Features):
+        return cls(
+            loop_id=str(features.loop_id),
+            content=features.content,
+            model_name=features.model_name,
+        )
+
+    def to_dataclass(self):
+        return beaver.Features(
+            loop_id=self.loop_id, content=self.content, model_name=self.model_name
+        )
+
+
+class Prediction(Base):
+    __tablename__ = "predictions"
+    loop_id = sqla.Column(sqla.Text(), primary_key=True)
+    content = sqla.Column(sqla.JSON())
+    model_name = sqla.Column(sqla.Text(), primary_key=True)
+
+    @classmethod
+    def from_dataclass(cls, prediction: beaver.Prediction):
+        return cls(
+            loop_id=str(prediction.loop_id),
+            content=prediction.content,
+            model_name=prediction.model_name,
+        )
+
+    def to_dataclass(self):
+        return beaver.Prediction(
+            loop_id=self.loop_id, content=self.content, model_name=self.model_name
+        )
+
+
+class Label(Base):
+    __tablename__ = "labels"
+    loop_id = sqla.Column(sqla.Text(), primary_key=True)
+    content = sqla.Column(sqla.JSON())
+
+    @classmethod
+    def from_dataclass(cls, label: beaver.Label):
+        return cls(loop_id=str(label.loop_id), content=label.content)
+
+    def to_dataclass(self):
+        return beaver.Label(loop_id=self.loop_id, content=self.content)
 
 
 class SQLDataStore(DataStore):
     def __init__(self, url):
         self.engine = sqla.create_engine(url)
 
-    def prepare(self):
+    def build(self):
         Base.metadata.create_all(self.engine)
 
     @contextlib.contextmanager
@@ -83,12 +135,22 @@ class SQLDataStore(DataStore):
             pass
 
     def store(self, kind, loop_part):
-        row = {"event": Event}[kind].from_dataclass(loop_part)
+        row = {
+            "event": Event,
+            "features": Features,
+            "prediction": Prediction,
+            "label": Label,
+        }[kind].from_dataclass(loop_part)
         with self.session() as session:
             session.add(row)
 
     def get(self, kind, loop_id):
-        klass = {"event": Event}[kind]
+        klass = {
+            "event": Event,
+            "features": Features,
+            "prediction": Prediction,
+            "label": Label,
+        }[kind]
         with self.session() as session:
             return (
                 session.query(klass)

@@ -19,6 +19,8 @@ river = "^0.10.1"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^22.3.0", allow-prereleases = true}
+pytest = "^7.1.1"
+ipykernel = "^6.12.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

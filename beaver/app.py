@@ -6,6 +6,11 @@ import beaver
 
 class App(pydantic.BaseSettings):
     model_store: beaver.model_store.ModelStore
+    data_store: beaver.data_store.DataStore
+
+    def build(self):
+        self.model_store.build()
+        self.data_store.build()
 
     @property
     def http_server(self):
@@ -30,3 +35,16 @@ class App(pydantic.BaseSettings):
             model_bytes=dill.dumps(model),
         )
         self.model_store.store(model_envelope)
+
+    def predict(self, event, model_name):
+        model_envelope = self.model_store.get(model_name)
+        model = dill.loads(model_envelope.model_bytes)
+        event = beaver.Event(content=event)
+        prediction = beaver.Prediction(
+            content=model.predict(event.content.copy()),
+            model_name=model_name,
+            loop_id=event.loop_id,
+        )
+        self.data_store.store_event(event)
+        self.data_store.store_prediction(prediction)
+        return prediction

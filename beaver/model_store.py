@@ -10,7 +10,7 @@ import beaver
 
 
 class ModelStore(abc.ABC):
-    def prepare(self):
+    def build(self):
         ...
 
     @abc.abstractmethod
@@ -34,27 +34,6 @@ class ModelStore(abc.ABC):
 
 
 class ShelveModelStore(ModelStore):
-    """
-
-    >>> import beaver
-    >>> import uuid
-
-    >>> model_store = beaver.model_store.ShelveModelStore("model_jar")
-
-    >>> envelope = beaver.ModelEnvelope("foo")
-    >>> model_store.store(envelope)
-    >>> model_store.get(envelope.sku).name
-    'foo'
-
-    >>> model_store.clear()
-    >>> try:
-    ...     model_store.get(envelope.sku)
-    ... except KeyError:
-    ...     print("Key doesn't exist")
-    Key doesn't exist
-
-    """
-
     def __init__(self, path):
         self.path = pathlib.Path(path)
 
