@@ -1,6 +1,7 @@
 import functools
 import dill
 from fastapi import Depends, File, Form, FastAPI
+from fastapi.encoders import jsonable_encoder
 import pydantic
 import beaver
 import base64
@@ -51,15 +52,5 @@ async def predict(
     predict_event: PredictEvent,
     settings: Settings = Depends(get_settings),
 ):
-    # TODO: the prediction is not JSON serializable because of created_at which is a datetime
-    return settings.app.predict(event=predict_event.event, model_name=model_name)
-
-
-# @api.post("/models/leader")
-# async def set_leader():
-#     ...
-
-
-# @api.post("/label/")
-# async def label():
-#     ...
+    prediction = settings.app.predict(event=predict_event.event, model_name=model_name)
+    return jsonable_encoder(prediction)
