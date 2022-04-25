@@ -42,15 +42,30 @@ async def get_models(settings: Settings = Depends(get_settings)):
     return settings.app.model_store.list_names()
 
 
-class PredictEvent(pydantic.BaseModel):
+class PredictIn(pydantic.BaseModel):
     event: dict
 
 
 @api.post("/predict/{model_name}")
 async def predict(
     model_name: str,
-    predict_event: PredictEvent,
+    payload: PredictIn,
     settings: Settings = Depends(get_settings),
 ):
-    prediction = settings.app.predict(event=predict_event.event, model_name=model_name)
+    prediction = settings.app.make_prediction(
+        event=payload.event, model_name=model_name
+    )
     return jsonable_encoder(prediction)
+
+
+class LabelIn(pydantic.BaseModel):
+    label: beaver.types.Label
+
+
+@api.post("/label/{loop_id}")
+async def label(
+    loop_id: str,
+    payload: LabelIn,
+    settings: Settings = Depends(get_settings),
+):
+    settings.app.store_label(loop_id=loop_id, label=payload.label)

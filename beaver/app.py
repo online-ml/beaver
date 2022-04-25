@@ -36,7 +36,7 @@ class App(pydantic.BaseSettings):
         )
         self.model_store.store(model_envelope)
 
-    def predict(self, event, model_name):
+    def make_prediction(self, event: dict, model_name: str):
         model_envelope = self.model_store.get(model_name)
         model = dill.loads(model_envelope.model_bytes)
         event = beaver.Event(content=event)
@@ -48,3 +48,6 @@ class App(pydantic.BaseSettings):
         self.data_store.store_event(event)
         self.data_store.store_prediction(prediction)
         return prediction
+
+    def store_label(self, loop_id: str, label: beaver.types.Label):
+        self.data_store.store_label(beaver.Label(content=label, loop_id=loop_id))

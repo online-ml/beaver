@@ -17,7 +17,10 @@ class SDK:
         r = requests.request(
             method=method, url=urllib.parse.urljoin(self.host, endpoint), **kwargs
         )
-        r.raise_for_status()
+        try:
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            raise ValueError(r.json()) from e
         return r
 
 
@@ -45,3 +48,6 @@ class HTTPClient(SDK):
         return self._request(
             "POST", f"predict/{model_name}", json={"event": event}
         ).json()
+
+    def label(self, loop_id, label):
+        self._request("POST", f"label/{loop_id}", json={"label": label})
