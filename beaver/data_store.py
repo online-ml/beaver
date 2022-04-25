@@ -1,8 +1,12 @@
 from __future__ import annotations
 import abc
 import contextlib
+import dataclasses
+import datetime as dt
+import graphlib
 import uuid
 import pathlib
+import re
 
 import beaver
 import sqlalchemy as sqla
@@ -52,9 +56,14 @@ class DataStore(abc.ABC):
 Base = sqlalchemy.orm.declarative_base()
 
 
-class Event(Base):
-    __tablename__ = "events"
+class LoopPart(Base):
+    __abstract__ = True
     loop_id = sqla.Column(sqla.Text(), primary_key=True)
+    created_at = sqla.Column(sqla.DateTime(), default=dt.datetime.now)
+
+
+class Event(LoopPart):
+    __tablename__ = "events"
     content = sqla.Column(sqla.JSON())
 
     @classmethod
@@ -65,9 +74,8 @@ class Event(Base):
         return beaver.Event(loop_id=self.loop_id, content=self.content)
 
 
-class Features(Base):
+class Features(LoopPart):
     __tablename__ = "features"
-    loop_id = sqla.Column(sqla.Text(), primary_key=True)
     content = sqla.Column(sqla.JSON())
     model_name = sqla.Column(sqla.Text(), primary_key=True)
 
@@ -85,9 +93,8 @@ class Features(Base):
         )
 
 
-class Prediction(Base):
+class Prediction(LoopPart):
     __tablename__ = "predictions"
-    loop_id = sqla.Column(sqla.Text(), primary_key=True)
     content = sqla.Column(sqla.JSON())
     model_name = sqla.Column(sqla.Text(), primary_key=True)
 
@@ -105,9 +112,8 @@ class Prediction(Base):
         )
 
 
-class Label(Base):
+class Label(LoopPart):
     __tablename__ = "labels"
-    loop_id = sqla.Column(sqla.Text(), primary_key=True)
     content = sqla.Column(sqla.JSON())
 
     @classmethod
@@ -118,12 +124,53 @@ class Label(Base):
         return beaver.Label(loop_id=self.loop_id, content=self.content)
 
 
+@dataclasses.dataclass
+class View:
+    path: pathlib.Path
+
+    def __hash__(self):
+        return hash(self.name)
+
+    @property
+    def name(self):
+        return self.path.stem
+
+    @property
+    def query(self):
+        return self.path.read_text().rstrip().rstrip(";")
+
+    @property
+    def cte_names(self):
+        pattern = r'"?(?P<table>\w+)"? AS \('
+        return {match.group("table") for match in re.finditer(pattern, self.query)}
+
+    @property
+    def dependencies(self):
+        pattern = r'(FROM|(LEFT|RIGHT|INNER|OUTER)? JOIN) "?(?P<table>\w+)"?'
+        tables = {match.group("table") for match in re.finditer(pattern, self.query)}
+        return tables - self.cte_names
+
+
 class SQLDataStore(DataStore):
     def __init__(self, url):
         self.engine = sqla.create_engine(url)
 
     def build(self):
         Base.metadata.create_all(self.engine)
+
+        here = pathlib.Path(__file__)
+        views = [View(path) for path in here.parent.glob("views/*.sql")]
+        views = {view.name: view for view in views}
+
+        dependencies = {view: set() for view in views.values()}
+        for view in views.values():
+            for dep in view.dependencies & views.keys():
+                dependencies[view].add(views[dep])
+
+        for view in graphlib.TopologicalSorter(dependencies).static_order():
+            sql = f"DROP VIEW IF EXISTS {view.name} CASCADE;\n"
+            sql = f"CREATE VIEW {view.name} AS {view.query};\n"
+            self.engine.execute(sqla.text(sql))
 
     @contextlib.contextmanager
     def session(self):

@@ -1,4 +1,4 @@
 /*.ipynb
 .ipynb_checkpoints
 *.pyc
-*.db
+*.sqlite
