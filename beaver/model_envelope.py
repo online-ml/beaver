@@ -1,4 +1,5 @@
 from typing import Optional
+import datetime as dt
 import dataclasses
 import dataclasses_json
 
@@ -10,3 +11,4 @@ class ModelEnvelope(dataclasses_json.DataClassJsonMixin):
     is_learner: bool
     model_bytes: Optional[bytes] = None
     is_active: bool = True
+    last_label_created_at: Optional[dt.datetime] = None

@@ -69,3 +69,11 @@ async def label(
     settings: Settings = Depends(get_settings),
 ):
     settings.app.store_label(loop_id=loop_id, label=payload.label)
+
+
+@api.post("/train/{model_name}")
+async def train(
+    model_name: str,
+    settings: Settings = Depends(get_settings),
+):
+    settings.app.train_model(model_name=model_name)

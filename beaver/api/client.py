@@ -20,7 +20,10 @@ class SDK:
         try:
             r.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            raise ValueError(r.json()) from e
+            try:
+                raise ValueError(r.json()) from e
+            except requests.exceptions.JSONDecodeError:
+                raise e
         return r
 
 
@@ -51,3 +54,6 @@ class HTTPClient(SDK):
 
     def label(self, loop_id, label):
         self._request("POST", f"label/{loop_id}", json={"label": label})
+
+    def train(self, model_name):
+        self._request("POST", f"train/{model_name}")

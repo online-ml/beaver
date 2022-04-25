@@ -1,7 +1,9 @@
+import datetime as dt
 import dill
 import pydantic
 
 import beaver
+import pandas as pd
 
 
 class App(pydantic.BaseSettings):
@@ -51,3 +53,23 @@ class App(pydantic.BaseSettings):
 
     def store_label(self, loop_id: str, label: beaver.types.Label):
         self.data_store.store_label(beaver.Label(content=label, loop_id=loop_id))
+
+    def load_training_data(self, since: dt.datetime = None):
+        train = pd.read_sql_table("labelled_events", con=self.data_store.engine)
+        return zip(
+            train["label_created_at"], train["event"], train["label"].astype(float)
+        )
+
+    def train_model(self, model_name: str):
+        model_envelope = self.model_store.get(model_name)
+        if model_envelope.is_featurizer:
+            raise ValueError("Not supported yet")
+        if not model_envelope.is_learner:
+            raise ValueError("Model can't learn")
+
+        model = dill.loads(model_envelope.model_bytes)
+        for at, x, y in self.load_training_data(model_envelope.last_label_created_at):
+            model.learn(x, y)
+        model.last_label_created_at = at
+        model_envelope.model_bytes = dill.dumps(model)
+        self.model_store.store(model_envelope)

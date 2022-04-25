@@ -4,7 +4,7 @@ from river import linear_model
 from river import preprocessing
 
 
-client = beaver.HTTPClient(host="http://127.0.0.1:8000")
+client = beaver.HTTPClient(host="http://127.0.0.1:3000")
 
 
 def parse(trip):
