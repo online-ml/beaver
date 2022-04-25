@@ -23,3 +23,13 @@ Simulate traffic.
 ```sh
 python simulate_traffic.py
 ```
+
+Check predictive performance.
+
+```py
+import pandas as pd
+import sqlite3
+
+with sqlite3.connect('taxis.sqlite') as con:
+    print(pd.read_sql_table('metrics', con))
+```
