@@ -47,5 +47,6 @@ import pandas as pd
 import sqlite3
 
 with sqlite3.connect('taxis.sqlite') as con:
-    print(pd.read_sql_table('metrics', con))
+    print(pd.read_sql_table('sliding_metrics', con))
+    print(pd.read_sql_table('cumulative_metrics', con))
 ```
