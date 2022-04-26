@@ -86,7 +86,6 @@ class App(pydantic.BaseSettings):
 
         model = dill.loads(model_envelope.model_bytes)
         for at, x, y in training_data:
-            print(x, y)
             model.learn(x, y)
 
         model_envelope.last_label_created_at = at

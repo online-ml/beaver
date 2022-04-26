@@ -16,7 +16,7 @@ pip install river
 The Beaver app is defined in `server.py`. It gives access to a [FastAPI](https://fastapi.tiangolo.com/) server which you can start from the terminal:
 
 ```sh
-uvicorn server:app.http_server --port 3000 --reload
+uvicorn server:app.http_server --port 3000
 
 # Alternatively, you can do this if you're developping
 uvicorn server:app.http_server --port 3000 --reload --reload-dir ../../
