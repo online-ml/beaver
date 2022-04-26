@@ -11,5 +11,5 @@ args = parser.parse_args()
 
 while True:
     time.sleep(args.every_seconds)
-    client.train(model_name="Linear regression")
-    print(f"Training completed at {dt.datetime.now()}")
+    training = client.train(model_name="Linear regression")
+    print(f"Training completed at {dt.datetime.now()} on {training['n_rows']} rows")

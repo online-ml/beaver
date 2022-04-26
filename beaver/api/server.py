@@ -78,4 +78,5 @@ async def train(
     model_name: str,
     settings: Settings = Depends(get_settings),
 ):
-    settings.app.train_model(model_name=model_name)
+    n_rows = settings.app.train_model(model_name=model_name)
+    return {"n_rows": n_rows}

@@ -57,4 +57,4 @@ class HTTPClient(SDK):
         self._request("POST", f"label/{loop_id}", json={"label": label})
 
     def train(self, model_name):
-        self._request("POST", f"train/{model_name}")
+        return self._request("POST", f"train/{model_name}").json()

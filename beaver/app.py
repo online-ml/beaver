@@ -61,7 +61,7 @@ class App(pydantic.BaseSettings):
     def load_training_data(self, since: dt.datetime = None):
         sql = "SELECT * FROM labelled_events WHERE event IS NOT NULL"
         if since:
-            sql += f"\nWHERE label_created_at > '{since}'"
+            sql += f" AND label_created_at > '{since}'"
         train = pd.read_sql(sql, con=self.data_store.engine)
         return list(
             zip(
@@ -82,13 +82,14 @@ class App(pydantic.BaseSettings):
             since=model_envelope.last_label_created_at
         )
         if not training_data:
-            return
+            return 0
 
         model = dill.loads(model_envelope.model_bytes)
         for at, x, y in training_data:
             print(x, y)
             model.learn(x, y)
 
-        model.last_label_created_at = at
+        model_envelope.last_label_created_at = at
         model_envelope.model_bytes = dill.dumps(model)
         self.model_store.store(model_envelope)
+        return len(training_data)
