@@ -1,0 +1,84 @@
+import argparse
+import datetime as dt
+import json
+import time
+
+import beaver
+from river import datasets
+from river import metrics
+from river import stream
+
+
+class colors:
+    GREEN = "\033[92m"
+    BLUE = "\033[94m"
+    ENDC = "\033[0m"
+
+
+if __name__ == "__main__":
+
+    client = beaver.HTTPClient(host="http://127.0.0.1:3000")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("speed_up", type=int, nargs="?", default=1)
+    args = parser.parse_args()
+
+    def sleep(td: dt.timedelta):
+        if td.seconds >= 0:
+            time.sleep(td.seconds / args.speed_up)
+
+    # Use the first trip's departure time as a reference time
+    taxis = datasets.Taxis()
+    now = next(iter(taxis))[0]["pickup_datetime"]
+    predictions = {}
+
+    for trip_no, trip, duration in stream.simulate_qa(
+        taxis,
+        moment="pickup_datetime",
+        delay=lambda _, duration: dt.timedelta(seconds=duration),
+    ):
+
+        trip_no = str(trip_no).zfill(len(str(taxis.n_samples)))
+
+        # Taxi trip starts
+
+        if duration is None:
+
+            # Wait
+            sleep(trip["pickup_datetime"] - now)
+            now = trip["pickup_datetime"]
+
+            # Ask chantilly to make a prediction
+            client.predict(event=x, model_name="Linear regression")
+            r = requests.post(
+                host + "/api/predict",
+                json={
+                    "id": trip_no,
+                    "features": {
+                        **trip,
+                        "pickup_datetime": trip["pickup_datetime"].isoformat(),
+                    },
+                },
+            )
+
+            # Store the prediction
+            predictions[trip_no] = client.predict(
+                event=x, model_name="Linear regression"
+            )
+
+            print(colors.GREEN + f"#{trip_no} departs at {now}" + colors.ENDC)
+            continue
+
+        # Taxi trip ends
+
+        # Wait
+        arrival_time = trip["pickup_datetime"] + dt.timedelta(seconds=duration)
+        sleep(arrival_time - now)
+        now = arrival_time
+
+        # Ask chantilly to update the model
+        requests.post(
+            host + "/api/learn", json={"id": trip_no, "ground_truth": duration}
+        )
+
+        print(colors.BLUE + f"#{trip_no} arrives at {now}" + colors.ENDC)

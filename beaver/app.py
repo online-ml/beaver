@@ -1,6 +1,7 @@
 import datetime as dt
 import dill
 import pydantic
+from typing import Optional
 
 import beaver
 import pandas as pd
@@ -38,10 +39,12 @@ class App(pydantic.BaseSettings):
         )
         self.model_store.store(model_envelope)
 
-    def make_prediction(self, event: dict, model_name: str):
+    def make_prediction(
+        self, event: dict, model_name: str, loop_id: Optional[str] = None
+    ):
         model_envelope = self.model_store.get(model_name)
         model = dill.loads(model_envelope.model_bytes)
-        event = beaver.Event(content=event)
+        event = beaver.Event(content=event, loop_id=loop_id)
         prediction = beaver.Prediction(
             content=model.predict(event.content.copy()),
             model_name=model_name,

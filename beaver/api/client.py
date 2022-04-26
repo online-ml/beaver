@@ -47,10 +47,11 @@ class HTTPClient(SDK):
         super().__init__(host=host)
         self.models = ModelsSDK(host=host)
 
-    def predict(self, event, model_name):
-        return self._request(
-            "POST", f"predict/{model_name}", json={"event": event}
-        ).json()
+    def predict(self, event, model_name, loop_id=None):
+        payload = {"event": event}
+        if loop_id is not None:
+            payload["loop_id"] = loop_id
+        return self._request("POST", f"predict/{model_name}", json=payload).json()
 
     def label(self, loop_id, label):
         self._request("POST", f"label/{loop_id}", json={"label": label})

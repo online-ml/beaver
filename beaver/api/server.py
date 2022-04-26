@@ -1,5 +1,6 @@
 import functools
 import dill
+from typing import Optional
 from fastapi import Depends, File, Form, FastAPI
 from fastapi.encoders import jsonable_encoder
 import pydantic
@@ -44,6 +45,7 @@ async def get_models(settings: Settings = Depends(get_settings)):
 
 class PredictIn(pydantic.BaseModel):
     event: dict
+    loop_id: Optional[str] = None
 
 
 @api.post("/predict/{model_name}")
@@ -53,7 +55,7 @@ async def predict(
     settings: Settings = Depends(get_settings),
 ):
     prediction = settings.app.make_prediction(
-        event=payload.event, model_name=model_name
+        event=payload.event, model_name=model_name, loop_id=payload.loop_id
     )
     return jsonable_encoder(prediction)
 
