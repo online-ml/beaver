@@ -8,7 +8,7 @@ import beaver
 import pandas as pd
 
 
-class App(pydantic.BaseSettings):
+class Dam(pydantic.BaseSettings):
     model_store: beaver.model_store.ModelStore
     data_store: beaver.data_store.DataStore
 
@@ -21,7 +21,7 @@ class App(pydantic.BaseSettings):
         from beaver.api.server import api, Settings, get_settings
 
         def get_settings_override():
-            return Settings(app=self)
+            return Settings(dam=self)
 
         api.dependency_overrides[get_settings] = get_settings_override
 

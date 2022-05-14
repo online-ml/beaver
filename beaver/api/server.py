@@ -11,7 +11,7 @@ api = FastAPI()
 
 
 class Settings(pydantic.BaseSettings):
-    app: beaver.App = None
+    dam: beaver.Dam = None
 
 
 @functools.lru_cache()
@@ -30,17 +30,17 @@ async def post_model(
     settings: Settings = Depends(get_settings),
 ):
     model = deserialize_model(model_bytes)
-    settings.app.store_model(name, model)
+    settings.dam.store_model(name, model)
 
 
 @api.delete("/models/{name}")
 async def delete_model(name: str, settings: Settings = Depends(get_settings)):
-    settings.app.model_store.delete(name)
+    settings.dam.model_store.delete(name)
 
 
 @api.get("/models/")
 async def get_models(settings: Settings = Depends(get_settings)):
-    return settings.app.model_store.list_names()
+    return settings.dam.model_store.list_names()
 
 
 class PredictIn(pydantic.BaseModel):
@@ -54,7 +54,7 @@ async def predict(
     payload: PredictIn,
     settings: Settings = Depends(get_settings),
 ):
-    prediction = settings.app.make_prediction(
+    prediction = settings.dam.make_prediction(
         event=payload.event, model_name=model_name, loop_id=payload.loop_id
     )
     return jsonable_encoder(prediction)
@@ -70,7 +70,7 @@ async def label(
     payload: LabelIn,
     settings: Settings = Depends(get_settings),
 ):
-    settings.app.store_label(loop_id=loop_id, label=payload.label)
+    settings.dam.store_label(loop_id=loop_id, label=payload.label)
 
 
 @api.post("/train/{model_name}")
@@ -78,5 +78,5 @@ async def train(
     model_name: str,
     settings: Settings = Depends(get_settings),
 ):
-    n_rows = settings.app.train_model(model_name=model_name)
+    n_rows = settings.dam.train_model(model_name=model_name)
     return {"n_rows": n_rows}
