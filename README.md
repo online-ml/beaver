@@ -21,12 +21,28 @@ Once instantiated, the `Dam` is supposed to be run on a server. There are then m
 The first thing to do is initialize a `Dam`.
 
 ```py
+import beaver
+
 dam = beaver.Dam(
-    model_store=beaver.model_store.ShelveModelStore(
-        path=pathlib.Path.home() / "Downloads"
-    ),
-    data_store=beaver.data_store.SQLDataStore(url="sqlite:///db.sqlite"),
+    model_store=beaver.model_store.ShelveModelStore('~Downloads'),
+    data_store=beaver.data_store.SQLDataStore('sqlite:///db.sqlite'),
 )
+dam.build()
+```
+
+The `build` method makes sure each component is ready to be used. Assuming the above code is in a file named `server.py`, you may then start an HTTP server by leveraging FastAPI:
+
+```py
+uvicorn server:dam.http_server --port 3000
+```
+
+The server can then be interacted with via an HTTP client:
+
+```py
+import beaver
+
+client = beaver.HTTPClient(host='http://127.0.0.1:3000')
+client.models.upload('foo', foo)
 ```
 
 ## Examples

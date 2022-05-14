@@ -13,13 +13,13 @@ pip install river
 
 ## Steps
 
-The Beaver app is defined in `server.py`. It gives access to a [FastAPI](https://fastapi.tiangolo.com/) server which you can start from the terminal:
+The Beaver dam is defined in `server.py`. It gives access to a [FastAPI](https://fastapi.tiangolo.com/) server which you can start from the terminal:
 
 ```sh
-uvicorn server:app.http_server --port 3000
+uvicorn server:dam.http_server --port 3000
 
 # Alternatively, you can do this if you're developping
-uvicorn server:app.http_server --port 3000 --reload --reload-dir ../../
+uvicorn server:dam.http_server --port 3000 --reload --reload-dir ../../
 ```
 
 Then we upload a River model from a second terminal. The model is serialized with [dill](https://github.com/uqfoundation/dill) and the bytes are send over HTTP.
