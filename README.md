@@ -40,9 +40,12 @@ The server can then be interacted with via an HTTP client:
 
 ```py
 import beaver
+from river import linear_model
+
+model = linear_model.LogisticRegression()
 
 client = beaver.HTTPClient(host='http://127.0.0.1:3000')
-client.models.upload('foo', foo)
+client.models.upload('my_model', model)
 ```
 
 ## Examples
