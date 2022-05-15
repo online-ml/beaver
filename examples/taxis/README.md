@@ -18,7 +18,7 @@ The Beaver dam is defined in `server.py`. It gives access to a [FastAPI](https:/
 ```sh
 uvicorn server:dam.http_server --port 3000
 
-# Alternatively, you can do this if you're developping
+# Alternatively, you can do this if you're developing
 uvicorn server:dam.http_server --port 3000 --reload --reload-dir ../../
 ```
 
