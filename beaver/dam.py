@@ -5,7 +5,6 @@ import pydantic
 from typing import Optional
 
 import beaver
-import pandas as pd
 
 
 class Dam(pydantic.BaseSettings):
@@ -59,17 +58,20 @@ class Dam(pydantic.BaseSettings):
         self.data_store.store_label(beaver.Label(content=label, loop_id=loop_id))
 
     def load_training_data(self, since: dt.datetime = None):
+
         sql = "SELECT * FROM labelled_events WHERE event IS NOT NULL"
         if since:
             sql += f" AND label_created_at > '{since}'"
-        train = pd.read_sql(sql, con=self.data_store.engine)
-        return list(
-            zip(
-                train["label_created_at"],
-                train["event"].map(json.loads),
-                train["label"].str.strip('"').astype(float),
+
+        result_proxy = self.data_store.engine.execute(query)
+
+        for row in result_proxy:
+            row = dict(row._mapping.items())
+            yield (
+                dt.datetime.fromisoformat(row["label_created_at"]),
+                json.loads[row["event"]],
+                row["label"].str.strip('"').astype(float),
             )
-        )
 
     def train_model(self, model_name: str):
         model_envelope = self.model_store.get(model_name)
@@ -81,14 +83,17 @@ class Dam(pydantic.BaseSettings):
         training_data = self.load_training_data(
             since=model_envelope.last_label_created_at
         )
-        if not training_data:
-            return 0
-
-        model = dill.loads(model_envelope.model_bytes)
+        n_training_data = 0
+        model = None
         for at, x, y in training_data:
+            if model is None:
+                model = dill.loads(model_envelope.model_bytes)
             model.learn(x, y)
+            n_training_data += 1
 
-        model_envelope.last_label_created_at = at
-        model_envelope.model_bytes = dill.dumps(model)
-        self.model_store.store(model_envelope)
-        return len(training_data)
+        if n_training_data:
+            model_envelope.last_label_created_at = at
+            model_envelope.model_bytes = dill.dumps(model)
+            self.model_store.store(model_envelope)
+
+        return n_training_data

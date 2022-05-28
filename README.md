@@ -16,9 +16,26 @@ A strong design principle is that Beaver is technology agnostic. If you want to 
 
 Once instantiated, the `Dam` is supposed to be run on a server. There are then multiple ways to interact with it. The most common way would be to start an HTTP server, and interact with said server from a client. That is one way to use Beaver. But you can also directly use the `Dam` you instantiated, for instance if you don't need to have a client/server separation. This might be the case if you're deploying a model on an embedded device with no internet connection.
 
-## Usage
+## Installation
 
-The first thing to do is initialize a `Dam`.
+### Docker
+
+The easiest way is to run the provided `docker-compose.yaml`.
+
+```sh
+git clone https://github.com/MaxHalford/beaver
+docker-compose up
+```
+
+### Python package
+
+You can also just install the `beaver` Python package.
+
+```sh
+pip install git+https://github.com/MaxHalford/beaver
+```
+
+Then it's up to you to handle the rest. The first thing to do is initialize a `Dam`.
 
 ```py
 import beaver
@@ -35,6 +52,8 @@ The `build` method makes sure each component is ready to be used. Assuming the a
 ```py
 uvicorn server:dam.http_server --port 3000
 ```
+
+## Usage
 
 The server can then be interacted with via an HTTP client:
 
