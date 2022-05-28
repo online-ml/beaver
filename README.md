@@ -71,6 +71,20 @@ client.models.upload('my_model', model)
 
 - [🚕 Taxis](examples/taxis)
 
+
+## Deployment
+
+### Docker
+
+```sh
+docker build -t beaver .
+docker run -it -p 3000:3000 beaver
+```
+
+### Helm chart
+
+Coming soon.
+
 ## Development
 
 ```sh
