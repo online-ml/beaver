@@ -37,6 +37,9 @@ class ShelveModelStore(ModelStore):
     def __init__(self, path):
         self.path = pathlib.Path(path)
 
+    def build(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+
     @contextlib.contextmanager
     def db(self, *args, **kwds):
         db = shelve.open(str(self.path))

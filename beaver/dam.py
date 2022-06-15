@@ -63,14 +63,14 @@ class Dam(pydantic.BaseSettings):
         if since:
             sql += f" AND label_created_at > '{since}'"
 
-        result_proxy = self.data_store.engine.execute(query)
+        result_proxy = self.data_store.engine.execute(sql)
 
         for row in result_proxy:
             row = dict(row._mapping.items())
             yield (
                 dt.datetime.fromisoformat(row["label_created_at"]),
-                json.loads[row["event"]],
-                row["label"].str.strip('"').astype(float),
+                json.loads(row["event"]),
+                float(row["label"].strip('"')),
             )
 
     def train_model(self, model_name: str):
