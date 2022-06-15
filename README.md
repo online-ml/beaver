@@ -24,6 +24,7 @@ The easiest way is to run the provided `docker-compose.yaml`.
 
 ```sh
 git clone https://github.com/MaxHalford/beaver
+cd beaver
 docker-compose up
 ```
 
