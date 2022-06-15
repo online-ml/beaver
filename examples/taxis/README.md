@@ -25,19 +25,19 @@ pip install -r requirements.txt
 
 ## Steps
 
-First we'll upload a [River](https://github.com/online-ml/river) model from a second terminal. The model is serialized with [dill](https://github.com/uqfoundation/dill) and the bytes are sent over HTTP.
+Let's first upload a [River](https://github.com/online-ml/river) model. The model is serialized with [dill](https://github.com/uqfoundation/dill) and the bytes are sent over HTTP.
 
 ```sh
 python upload_model.py
 ```
 
-Now we can simulate traffic. The order is the same as what happened in production. This is because we know the departure and arrival times of each taxi trip. We'll apply a x15 speed-up to make things more exciting.
+Now we can simulate traffic. The order is the same as what happened in production. This is because we know the departure and arrival times of each taxi trip, and can thus reproduce the exact same timeline. We'll apply a x15 speed-up to make things more exciting.
 
 ```sh
 python simulate.py 15
 ```
 
-You can periodically retrain the model in a third terminal, say, every 10 seconds:
+You can periodically retrain the model in another, say, every 10 seconds:
 
 ```sh
 python train.py 10
