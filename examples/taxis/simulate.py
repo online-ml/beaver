@@ -18,6 +18,7 @@ class colors:
 if __name__ == "__main__":
 
     client = beaver.HTTPClient(host="http://127.0.0.1:3000")
+    client._request("POST", f"_clear/data-store")  # for idempotency
 
     parser = argparse.ArgumentParser()
     parser.add_argument("speed", type=int, nargs="?", default=1)

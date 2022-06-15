@@ -168,9 +168,15 @@ class SQLDataStore(DataStore):
                 dependencies[view].add(views[dep])
 
         for view in graphlib.TopologicalSorter(dependencies).static_order():
-            sql = f"DROP VIEW IF EXISTS {view.name} CASCADE;\n"
-            sql = f"CREATE VIEW {view.name} AS {view.query};\n"
-            self.engine.execute(sqla.text(sql))
+            self.engine.execute(sqla.text(f"DROP VIEW IF EXISTS {view.name}"))
+            self.engine.execute(sqla.text(f"CREATE VIEW {view.name} AS {view.query}"))
+
+    def clear(self):
+        with contextlib.closing(self.engine.connect()) as con:
+            trans = con.begin()
+            for table in reversed(Base.metadata.sorted_tables):
+                con.execute(table.delete())
+            trans.commit()
 
     @contextlib.contextmanager
     def session(self):

@@ -80,3 +80,10 @@ async def train(
 ):
     n_rows = settings.dam.train_model(model_name=model_name)
     return {"n_rows": n_rows}
+
+
+@api.post("/_clear/data-store")
+async def _clear_data_store(
+    settings: Settings = Depends(get_settings),
+):
+    settings.dam.data_store.clear()

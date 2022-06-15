@@ -4,31 +4,34 @@ Simulating real traffic using the [*New York City Taxi Trip Duration* dataset](h
 
 ## Setup
 
+First of all you need a running instance of Beaver. For instance, you can to the root of this repo and start an instance in the background:
+
 ```sh
-pip install poetry
+(cd ... && docker-compose up -d)
+```
+
+You have to install the Beaver client to interact with the Beaver server:
+
+```sh
 poetry install
 poetry shell
-pip install river
+```
+
+Then there are a few extra Python requirements you have to install for this example.
+
+```sh
+pip install -r requirements.txt
 ```
 
 ## Steps
 
-The Beaver dam is defined in `server.py`. It gives access to a [FastAPI](https://fastapi.tiangolo.com/) server which you can start from the terminal:
-
-```sh
-uvicorn server:dam.http_server --port 3000
-
-# Alternatively, you can do this if you're developing
-uvicorn server:dam.http_server --port 3000 --reload --reload-dir ../../
-```
-
-Then we upload a River model from a second terminal. The model is serialized with [dill](https://github.com/uqfoundation/dill) and the bytes are send over HTTP.
+First we'll upload a [River](https://github.com/online-ml/river) model from a second terminal. The model is serialized with [dill](https://github.com/uqfoundation/dill) and the bytes are sent over HTTP.
 
 ```sh
 python upload_model.py
 ```
 
-Now we can simulate traffic, in exactly the same order and with the same delays as what would have happened in production. We'll apply a x15 speed-up.
+Now we can simulate traffic. The order is the same as what happened in production. This is because we know the departure and arrival times of each taxi trip. We'll apply a x15 speed-up to make things more exciting.
 
 ```sh
 python simulate.py 15
@@ -38,15 +41,4 @@ You can periodically retrain the model in a third terminal, say, every 10 second
 
 ```sh
 python train.py 10
-```
-
-We can check the predictive performance from a Python interpreter.
-
-```py
-import pandas as pd
-import sqlite3
-
-with sqlite3.connect('taxis.sqlite') as con:
-    print(pd.read_sql_table('sliding_metrics', con))
-    print(pd.read_sql_table('cumulative_metrics', con))
 ```
