@@ -36,9 +36,3 @@ Now we can simulate traffic. The order is the same as what happened in productio
 ```sh
 python simulate.py 15
 ```
-
-You can periodically retrain the model in another, say, every 10 seconds:
-
-```sh
-python train.py 10
-```
