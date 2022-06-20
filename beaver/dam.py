@@ -2,7 +2,7 @@ import datetime as dt
 import dill
 import json
 import pydantic
-from typing import Optional
+from typing import Optional, List
 
 import beaver
 
@@ -10,6 +10,7 @@ import beaver
 class Dam(pydantic.BaseSettings):
     model_store: beaver.model_store.ModelStore
     data_store: beaver.data_store.DataStore
+    training_regimes: List[beaver.training.Regime]
 
     def build(self):
         self.model_store.build()
@@ -55,7 +56,27 @@ class Dam(pydantic.BaseSettings):
         return prediction
 
     def store_label(self, loop_id: str, label: beaver.types.Label):
-        self.data_store.store_label(beaver.Label(content=label, loop_id=loop_id))
+        new_label = beaver.Label(content=label, loop_id=loop_id)
+        self.data_store.store_label(new_label)
+
+        # Check if ASAP learning is switched on
+        if not beaver.training.Regime.ASAP in self.training_regimes:
+            return
+
+        # Train all models which make a prediction for this loop_id
+        event = self.data_store.get_event(loop_id)
+        sql = "SELECT model_name FROM predictions WHERE loop_id IS NOT NULL"
+
+        for row in self.data_store.engine.execute(sql):
+            row = dict(row._mapping.items())
+            model_envelope = self.model_store.get(row["model_name"])
+            if model_envelope.is_featurizer:
+                raise ValueError("Models that featurize are not supported yet")
+            model = dill.loads(model_envelope.model_bytes)
+            model.learn(event.content, float(label))
+            model_envelope.last_label_created_at = new_label.created_at
+            model_envelope.model_bytes = dill.dumps(model)
+            self.model_store.store(model_envelope)
 
     def load_training_data(self, since: dt.datetime = None):
 
@@ -63,9 +84,7 @@ class Dam(pydantic.BaseSettings):
         if since:
             sql += f" AND label_created_at > '{since}'"
 
-        result_proxy = self.data_store.engine.execute(sql)
-
-        for row in result_proxy:
+        for row in self.data_store.engine.execute(sql):
             row = dict(row._mapping.items())
             yield (
                 dt.datetime.fromisoformat(row["label_created_at"]),
@@ -76,7 +95,7 @@ class Dam(pydantic.BaseSettings):
     def train_model(self, model_name: str):
         model_envelope = self.model_store.get(model_name)
         if model_envelope.is_featurizer:
-            raise ValueError("Not supported yet")
+            raise ValueError("Models that featurize are not supported yet")
         if not model_envelope.is_learner:
             raise ValueError("Model can't learn")
 

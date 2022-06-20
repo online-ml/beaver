@@ -10,7 +10,9 @@ client = beaver.HTTPClient(host="http://127.0.0.1:3000")
 def parse(trip):
     import datetime as dt
 
-    trip["pickup_datetime"] = dt.datetime.fromisoformat(trip["pickup_datetime"])
+    if not isinstance(trip["pickup_datetime"], dt.datetime):
+        trip["pickup_datetime"] = dt.datetime.fromisoformat(trip["pickup_datetime"])
+
     return trip
 
 
