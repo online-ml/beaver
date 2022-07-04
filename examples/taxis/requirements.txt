@@ -1,3 +1,5 @@
+platformdirs
 dill
 requests
 river
+pandas
