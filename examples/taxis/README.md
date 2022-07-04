@@ -2,6 +2,27 @@
 
 Simulating real traffic using the [*New York City Taxi Trip Duration* dataset](https://www.kaggle.com/c/nyc-taxi-trip-duration).
 
+## General idea
+
+This proccedure helps understand how beaver can be used to predict trip durations of taxis using an event dataset consisting of pickup date-times, pickup coordinates, arrival coordinates, etc.
+
+* The procedure here is to create an empty model using the river library
+* Serialize the model using dill
+* Upload the model using the beaver http client --> you could also do this using the HTTP API directly (see localhost:3000/docs for more details)
+* Then start receiving trip data in a simulation and make predictions for trip duration
+
+During simulation you should see the error decreasing with time, which can be visualized in the output messages as in:
+
+`
+... a taxi starts a trip with id 000014
+#0000014 departs at 2016-01-01 00:04:57
+... times goes by
+... eventually the trip ends
+#0000014 arrives at 2016-01-01 00:08:37, took 0:03:40, predicted 0:08:41
+`
+
+so for the trip 000014 we can see an error of more then 200% in this case
+
 ## Setup
 
 First of all you need a running instance of Beaver. For instance, you can to the root of this repo and start an instance in the background:
