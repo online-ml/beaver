@@ -13,13 +13,13 @@ This proccedure helps understand how beaver can be used to predict trip duration
 
 During simulation you should see the error decreasing with time, which can be visualized in the output messages as in:
 
-`
+```
 ... a taxi starts a trip with id 000014
 #0000014 departs at 2016-01-01 00:04:57
 ... times goes by
 ... eventually the trip ends
 #0000014 arrives at 2016-01-01 00:08:37, took 0:03:40, predicted 0:08:41
-`
+```
 
 so for the trip 000014 we can see an error of more then 200% in this case
 
