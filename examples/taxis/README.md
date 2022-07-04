@@ -7,12 +7,15 @@ Simulating real traffic using the [*New York City Taxi Trip Duration* dataset](h
 First of all you need a running instance of Beaver. For instance, you can to the root of this repo and start an instance in the background:
 
 ```sh
-(cd ... && docker-compose up -d)
+(cd ... && docker-compose up -d && docker exec -it app /bin/bash)
+# now interactive docker shell starts in /app directory, then do this:
+cd examples/taxis
 ```
 
 You have to install the Beaver client to interact with the Beaver server:
 
 ```sh
+pip install platformdirs
 poetry install
 poetry shell
 ```
