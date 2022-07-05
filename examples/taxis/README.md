@@ -8,7 +8,7 @@ This procedure helps understand how Beaver can be used to predict taxi trip dura
 
 * The procedure here is to create an empty model using River.
 * Serialize the model using dill
-* Upload the model using the beaver http client --> you could also do this using the HTTP API directly (see localhost:3000/docs for more details)
+* Upload the model using Beaver's HTTP client -- you could also do this using the HTTP API directly (see `localhost:3000/docs` for more details)
 * Then start receiving trip data in a simulation and make predictions for trip duration
 
 During simulation you should see the error decreasing with time, which can be visualized in the output messages as in:
