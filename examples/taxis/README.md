@@ -4,7 +4,7 @@ Simulating real traffic using the [*New York City Taxi Trip Duration* dataset](h
 
 ## General idea
 
-This proccedure helps understand how beaver can be used to predict trip durations of taxis using an event dataset consisting of pickup date-times, pickup coordinates, arrival coordinates, etc.
+This procedure helps understand how Beaver can be used to predict taxi trip durations using an event dataset. Each event contains a pickup timestamp, pickup coordinates, arrival coordinates, etc.
 
 * The procedure here is to create an empty model using the river library
 * Serialize the model using dill
