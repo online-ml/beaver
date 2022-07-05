@@ -21,7 +21,7 @@ During the simulation you should see the error decreasing with time, which can b
 #0000014 arrives at 2016-01-01 00:08:37, took 0:03:40, predicted 0:08:41
 ```
 
-so for the trip 000014 we can see an error of more then 200% in this case
+For this trip number 000014, we can see an error of over 200%.
 
 ## Setup
 
