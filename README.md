@@ -1,5 +1,9 @@
 # 🦫 Beaver
 
+<div align="center" >
+  <img src="digital_art.png" width="33%" />
+</div>
+
 ## Introduction
 
 Beaver is a system to deploy and maintain machine learning models. It is designed from the ground up to support online machine learning models. But it also works if you want to do inference with batch models.
