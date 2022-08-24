@@ -1,4 +1,4 @@
-<h1>🦫 Beaver</h1>
+<h1>🦫 Beaver — MLOps for (online) machine learning</h1>
 
 - [Introduction](#introduction)
 - [Installation](#installation)
