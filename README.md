@@ -31,7 +31,7 @@ More about Beaver [here](ABOUT.md).
 The easiest way is to run the provided `docker-compose.yaml`.
 
 ```sh
-git clone https://github.com/MaxHalford/beaver
+git clone https://github.com/online-ml/beaver
 cd beaver
 docker-compose up
 ```
@@ -41,10 +41,10 @@ docker-compose up
 You can also just install the `beaver` Python package.
 
 ```sh
-pip install git+https://github.com/MaxHalford/beaver
+pip install git+https://github.com/online-ml/beaver
 ```
 
-Then it's up to you to handle the rest. The first thing to do is initialize a `Dam`.
+Then it's up to you to handle the rest. The first thing to do is create a `Dam`:
 
 ```py
 import beaver
@@ -65,7 +65,7 @@ uvicorn server:dam.http_server --port 3000
 
 ## Usage
 
-Once it's running, the server can be interacted with via an HTTP client:
+Once it's running, you can talk to the server over HTTP:
 
 ```py
 import beaver
