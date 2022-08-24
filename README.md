@@ -1,10 +1,22 @@
-# 🦫 Beaver
-
-## Introduction
+<h1>🦫 Beaver</h1>
 
 <div align="center" >
   <img src="digital_art.png" width="33%" align="right" />
 </div>
+
+- [Introduction](#introduction)
+- [Installation](#installation)
+  - [Docker](#docker)
+  - [Python package](#python-package)
+- [Usage](#usage)
+- [Examples](#examples)
+- [Deployment](#deployment)
+  - [Docker](#docker-1)
+  - [Helm chart](#helm-chart)
+- [Development](#development)
+- [License](#license)
+
+## Introduction
 
 Beaver is a system to deploy and maintain machine learning models. It is designed from the ground up to support online machine learning models. But it also works with batch models if all you want to do is inference.
 
