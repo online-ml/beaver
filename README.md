@@ -18,7 +18,7 @@
   <img src="digital_art.png" width="33%" align="right" />
 </div>
 
-Beaver is a system to deploy and maintain machine learning models. It is **designed for online machine learning models**. But it **also works with batch models** if all you want to do is inference and do model monitoring.
+Beaver is a system to deploy and maintain machine learning models. It is **designed for online machine learning models**. But it **also works with batch models** if all you want to do is inference and performance monitoring.
 
 We want to provide a piece of software which takes care of the boring stuff, can be plugged into existing systems, and is fun to use.
 
