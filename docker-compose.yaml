@@ -1,15 +1,33 @@
 version: '3'
 services:
-  app:
-    build: .
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+
+  api:
+    build: api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
     ports:
       - 3000:3000
     volumes:
-      - .:/app
-    command:
-      [
-        "--reload",
-        "--reload-dir",
-        "/app",
-        "examples.wsgi:dam.http_server"
-      ]
+      - ./api:/code
+    command: >
+      bash -c "
+        python init_db.py &&
+        uvicorn api.main:app --host 0.0.0.0 --port 3000 --reload --reload-dir /code
+      "
+    depends_on:
+      - db
+
+volumes:
+  postgres:
