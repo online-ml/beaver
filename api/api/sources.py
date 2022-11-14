@@ -1,10 +1,5 @@
-from typing import Any, List
-
+import kafka
 import fastapi
-from fastapi import APIRouter, Body, Depends, HTTPException
-from fastapi.encoders import jsonable_encoder
-from pydantic.networks import EmailStr
-from sqlalchemy.orm import Session
 
 from api import db
 import sqlmodel as sqlm
@@ -16,8 +11,7 @@ class Source(sqlm.SQLModel, table=True):
     id: int | None = sqlm.Field(default=None, primary_key=True)
     name: str
     protocol: str
-    host: str
-    port: int
+    url: str
 
 
 @router.post("/")
@@ -25,14 +19,22 @@ def create_source(source: Source):
     with db.session() as session:
         session.add(source)
         session.commit()
-        session.refresh(session)
-        return session
+        session.refresh(source)
+        return source
 
 
 @router.get("/", response_model=list[Source])
-def read_sources(
-    offset: int = 0, limit: int = fastapi.Query(default=100, lte=100)
-) -> Any:
+def read_sources(offset: int = 0, limit: int = fastapi.Query(default=100, lte=100)):
     with db.session() as session:
         sources = session.exec(sqlm.select(Source).offset(offset).limit(limit)).all()
         return sources
+
+
+@router.get("/{source_id}")
+def read_source(source_id: int):
+    with db.session() as session:
+        source = session.get(Source, source_id)
+        consumer = kafka.KafkaConsumer(bootstrap_servers=[source.url])
+        if not source:
+            raise fastapi.HTTPException(status_code=404, detail="Source not found")
+        return {**source.dict(), "topics": consumer.topics}

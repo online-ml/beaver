@@ -13,21 +13,51 @@ services:
       - 5432:5432
     restart: unless-stopped
 
+  default_broker:
+    image: docker.vectorized.io/vectorized/redpanda:v21.9.5
+    command:
+     - redpanda start
+     - --overprovisioned
+     - --smp 1
+     - --memory 1G
+     - --reserve-memory 0M
+     - --node-id 0
+     - --check=false
+     - --kafka-addr 0.0.0.0:9092
+     - --advertise-kafka-addr default_broker:9092
+     - --pandaproxy-addr 0.0.0.0:8082
+     - --advertise-pandaproxy-addr default_broker:8082
+    environment:
+      - AUTO_CREATE_TOPICS_ENABLED=true
+    ports:
+     - 9092:9092
+     - 8081:8081
+     - 8082:8082
+
+  default_processor:
+    image: materialize/materialized:v0.12.0
+    container_name: materialize
+    command: -w1 --disable-telemetry
+    ports:
+      - 6875:6875
+
   api:
     build: api
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
     ports:
-      - 3000:3000
+      - 8000:8000
     volumes:
       - ./api:/code
     command: >
       bash -c "
         python init_db.py &&
-        uvicorn api.main:app --host 0.0.0.0 --port 3000 --reload --reload-dir /code
+        uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /code
       "
     depends_on:
       - db
+      - default_broker
+      - default_processor
 
 volumes:
   postgres:

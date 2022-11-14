@@ -10,6 +10,7 @@ engine = sqlm.create_engine(DATABASE_URL, echo=True)
 
 
 def init_db():
+    sqlm.SQLModel.metadata.drop_all(engine)
     sqlm.SQLModel.metadata.create_all(engine)
 
 
