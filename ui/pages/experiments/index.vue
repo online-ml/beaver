@@ -18,6 +18,6 @@
 
 <script setup>
 const { data: experiments } = await useFetch(
-  "http://localhost:8000/api/experiments"
+  "http://api:8000/api/experiments"
 );
 </script>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Runners</h1>
+    <h1>Runne</h1>
     <table>
       <tr>
         <th>Name</th>
@@ -19,5 +19,5 @@
 </template>
 
 <script setup>
-const { data: runners } = await useFetch("http://localhost:8000/api/runners");
+const { data: runners } = await useFetch("http://api:8000/api/runners");
 </script>

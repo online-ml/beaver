@@ -8,6 +8,6 @@
 <script setup>
 const route = useRoute();
 const { data: experiment } = await useFetch(
-  `http://localhost:8000/api/experiments/${route.params.id}`
+  `http://api:8000/api/experiments/${route.params.id}`
 );
 </script>

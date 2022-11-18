@@ -22,6 +22,6 @@
 
 <script setup>
 const { data: processors } = await useFetch(
-  "http://localhost:8000/api/processors"
+  "http://api:8000/api/processors"
 );
 </script>

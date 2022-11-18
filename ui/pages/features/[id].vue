@@ -8,6 +8,6 @@
 <script setup>
 const route = useRoute();
 const { data: features } = await useFetch(
-  `http://localhost:8000/api/features/${route.params.id}`
+  `http://api:8000/api/features/${route.params.id}`
 );
 </script>

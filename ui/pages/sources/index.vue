@@ -19,5 +19,5 @@
 </template>
 
 <script setup>
-const { data: sources } = await useFetch("http://localhost:8000/api/sources");
+const { data: sources } = await useFetch("http://api:8000/api/sources");
 </script>

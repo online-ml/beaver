@@ -15,5 +15,5 @@
 </template>
 
 <script setup>
-const { data: models } = await useFetch("http://localhost:8000/api/models");
+const { data: models } = await useFetch("http://api:8000/api/models");
 </script>
