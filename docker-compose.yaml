@@ -41,6 +41,25 @@ services:
     ports:
       - 6875:6875
 
+  redis:
+    image: 'bitnami/redis:latest'
+    container_name: redis
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+
+  default_runner:
+    build: api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+    command: celery -A api.experiments worker
+    depends_on:
+      - redis
+      - db
+      - default_broker
+      - default_processor
+
   api:
     build: api
     environment:
@@ -58,6 +77,7 @@ services:
       - db
       - default_broker
       - default_processor
+      - default_runner
 
 volumes:
   postgres:

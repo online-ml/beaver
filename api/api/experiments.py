@@ -10,9 +10,55 @@ from api import processors
 from api import sinks
 import psycopg
 import sqlmodel as sqlm
-from starlette import background
+import celery
 
 router = fastapi.APIRouter()
+
+
+RUNNER = celery.Celery("experiments", broker="redis://redis:6379/0")
+
+
+@RUNNER.task
+def run_inference(features_id, model_id, sink_id):
+    with db.session() as session:
+        feature_set = session.get(features.Features, features_id)
+        processor = session.get(processors.Processor, feature_set.processor_id)
+        model = session.get(models.Model, model_id)
+
+    model_obj = dill.loads(model.content)
+
+    sink = session.get(sinks.Sink, sink_id)
+    producer = kafka.KafkaProducer(
+        bootstrap_servers=[sink.url],
+        key_serializer=str.encode,
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    )
+
+    # Let's query the view to see what it contains. That way we can associate each feature with
+    # a name.
+    conn = psycopg.connect(processor.url)
+    with conn.cursor() as cur:
+        cur.execute(f"SHOW COLUMNS FROM {feature_set.name}")
+        schema = cur.fetchall()
+        columns = ["mz_timestamp", "mz_diff"] + [c[0] for c in schema]
+
+    conn = psycopg.connect(processor.url)
+    with conn.cursor() as cur:
+        for row in cur.stream(f"TAIL {feature_set.name}"):
+            named_features = dict(zip(columns, row))
+            key = named_features.pop(feature_set.key_field)
+            del named_features["mz_timestamp"]
+            del named_features["mz_diff"]
+
+            prediction = model_obj.predict_proba_one(named_features)
+            producer.send(
+                topic="predictions",
+                key=f"{key}#{model.name}",
+                value={
+                    "features": named_features,
+                    "prediction": prediction,
+                },
+            )
 
 
 class Experiment(sqlm.SQLModel, table=True):
@@ -30,51 +76,13 @@ class Experiment(sqlm.SQLModel, table=True):
         session.commit()
         session.refresh(self)
 
-        # self.run_inference()
-        task = background.BackgroundTask(self.run_inference)
-
-        return self
-
-    def run_inference(self):
-        with db.session() as session:
-            feature_set = session.get(features.Features, self.features_id)
-            processor = session.get(processors.Processor, feature_set.processor_id)
-            model = session.get(models.Model, self.model_id)
-
-        model_obj = dill.loads(model.content)
-
-        sink = session.get(sinks.Sink, self.sink_id)
-        producer = kafka.KafkaProducer(
-            bootstrap_servers=[sink.url],
-            key_serializer=str.encode,
-            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+        run_inference.delay(
+            features_id=self.features_id,
+            model_id=self.model_id,
+            sink_id=self.sink_id,
         )
 
-        # Let's query the view to see what it contains. That way we can associate each feature with
-        # a name.
-        conn = psycopg.connect(processor.url)
-        with conn.cursor() as cur:
-            cur.execute(f"SHOW COLUMNS FROM {feature_set.name}")
-            schema = cur.fetchall()
-            columns = ["mz_timestamp", "mz_diff"] + [c[0] for c in schema]
-
-        conn = psycopg.connect(processor.url)
-        with conn.cursor() as cur:
-            for row in cur.stream(f"TAIL {feature_set.name}"):
-                named_features = dict(zip(columns, row))
-                key = named_features.pop(feature_set.key_field)
-                del named_features["mz_timestamp"]
-                del named_features["mz_diff"]
-
-                prediction = model_obj.predict_proba_one(named_features)
-                producer.send(
-                    topic="predictions",
-                    key=f"{key}#{model.name}",
-                    value={
-                        "features": named_features,
-                        "prediction": prediction,
-                    },
-                )
+        return self
 
 
 @router.post("/")

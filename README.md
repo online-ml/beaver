@@ -6,9 +6,6 @@
   - [Python package](#python-package)
 - [Usage](#usage)
 - [Examples](#examples)
-- [Deployment](#deployment)
-  - [Docker](#docker-1)
-  - [Helm chart](#helm-chart)
 - [Development](#development)
 - [License](#license)
 
@@ -81,28 +78,26 @@ client.models.upload('my_model', model)
 
 - [🚕 Taxis](examples/taxis)
 
-## Deployment
-
-### Docker
-
-```sh
-docker build -t beaver .
-docker run -it -p 3000:3000 beaver
-```
-
-### Helm chart
-
-Coming soon.
-
 ## Development
 
 ```sh
 git clone https://github.com/online-ml/beaver
 cd beaver
-pip install poetry
-poetry install
-poetry shell
-pytest
+
+# Run the stack
+docker compose up --build -d
+
+# See what's running
+docker stats
+
+# Follow the logs for a particular service
+docker compose logs default_runner -f
+
+# Stop
+docker compose down
+
+# Clean slate
+docker compose down --rmi all -v --remove-orphans
 ```
 
 ## License
