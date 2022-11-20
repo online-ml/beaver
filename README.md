@@ -9,7 +9,7 @@
 ## 👋 Introduction
 
 <div align="center" >
-  <img src="digital_art.png" width="25%" align="right" />
+  <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
 </div>
 
 Beaver is...
