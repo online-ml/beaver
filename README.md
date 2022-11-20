@@ -14,7 +14,7 @@
 
 Beaver is...
 
-✨ The whole package: it's a framework to develop, deploy, and maintain machine learning models.
+✨ The whole package: it's a framework to develop, deploy, and maintain machine learning models. Including feature engineering.
 
 🍥 Online-first: it is designed for online machine learning models, while also supporting batch models.
 
@@ -22,7 +22,7 @@ Beaver is...
 
 🔋 Batteries included: it provides basic infrastructure and monitoring by default.
 
-🐢 [Interfaces all the way down](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/): you can plug in your existing message bus, stream processor, model store, etc.
+🐢 [Interfaces all the way down](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/): you can plug in your existing message bus, stream processor, model store, etc. At least, that's the idea.
 
 ## 🤱 Getting started
 
