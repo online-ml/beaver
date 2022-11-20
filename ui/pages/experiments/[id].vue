@@ -18,9 +18,13 @@ const { data: exp } = await useFetch(
   `http://localhost:8000/api/experiments/${route.params.id}`
 );
 
-const { data: monitoring, refresh } = await useFetch(
+const { data: monitoring } = await useFetch(
   `http://localhost:8000/api/experiments/${route.params.id}/monitor`
 );
 
-setInterval(refresh, 2000);
+// const { data: monitoring, refresh } = await useFetch(
+//   `http://localhost:8000/api/experiments/${route.params.id}/monitor`
+// );
+
+// setInterval(refresh, 2000);
 </script>

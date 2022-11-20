@@ -11,6 +11,7 @@ from api import processors
 from api import runners
 from api import sinks
 from api import sources
+from api import tasks
 from api import targets
 
 
@@ -114,6 +115,7 @@ if __name__ == "__main__":
 
         model = models.Model(
             name="Logistic regression",
+            task=tasks.TaskEnum.binary_clf,
             content=dill.dumps(
                 preprocessing.StandardScaler() | linear_model.LogisticRegression()
             ),
@@ -170,6 +172,7 @@ CREATE VIEW phishing_features AS (
 )""",
             key_field="row_id",
             target_field="is_phishing",
+            task=tasks.TaskEnum.binary_clf,
             processor_id=processor.id,
         ).create(session)
 

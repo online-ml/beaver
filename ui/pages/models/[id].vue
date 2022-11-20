@@ -1,7 +1,10 @@
 <template>
   <div>
     <h2>{{ model["name"] }}</h2>
-    <code>{{ model['class'] }}</code>
+    <ul>
+      <li><code>{{ model['class'] }}</code></li>
+      <li>{{ model['task'] }} task</li>
+    </ul>
     <pre>{{ model['repr'] }}</pre>
   </div>
 </template>

@@ -20,7 +20,7 @@ Beaver is...
 
 🍥 *Online-first* • it is designed for online machine learning models, while also supporting batch models.
 
-☝️ [*Opinionated*](https://www.youtube.com/watch?v=nzFTmJnIakk&list=PLIU25-FciwNaz5PqWPiHmPCMOFYoEsJ8c&index=5) • it encourages you to [process data in SQL](https://www.ethanrosenthal.com/2022/05/10/database-bundling/) and build models with Python.
+☝️ [*Opinionated*](https://www.youtube.com/watch?v=nzFTmJnIakk&list=PLIU25-FciwNaz5PqWPiHmPCMOFYoEsJ8c&index=5) • it encourages you to [process data with SQL](https://www.ethanrosenthal.com/2022/05/10/database-bundling/) and build models in Python.
 
 🔋 *Batteries included* • default infrastructure and monitoring are provided.
 
@@ -36,7 +36,7 @@ cd beaver
 docker-compose up
 ```
 
-Go to [localhost:3000](http://localhost:3000/) to check out the UI. This is a read-only interface. Interacting with the system happens through an API.
+Go to [http://localhost:3000)](http://localhost:3000/) to check out the UI. This is a read-only interface. Interacting with the system happens through an API.
 
 ```py
 from river import linear_model

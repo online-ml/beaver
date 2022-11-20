@@ -1,6 +1,7 @@
 import fastapi
 
 from api import db
+from api import tasks
 from api import processors
 import psycopg
 import sqlmodel as sqlm
@@ -14,6 +15,7 @@ class Target(sqlm.SQLModel, table=True):
     query: str
     key_field: str
     target_field: str
+    task: tasks.TaskEnum
 
     processor_id: int = sqlm.Field(foreign_key="processor.id")
     processor: processors.Processor = sqlm.Relationship(back_populates="targets")

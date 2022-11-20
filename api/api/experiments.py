@@ -9,6 +9,7 @@ from api import feature_sets
 from api import models
 from api import processors
 from api import sinks
+from api import tasks
 from api import targets
 from api import runners
 import psycopg
@@ -122,10 +123,16 @@ class Experiment(sqlm.SQLModel, table=True):
 
     def create(self, session):
 
+        # target.processor = feature_set.processor
         feature_set = session.get(feature_sets.FeatureSet, self.feature_set_id)
         target = session.get(targets.Target, self.target_id)
         if feature_set.processor_id != target.processor_id:
-            raise ValueError("Feature set and target must be on the same processor")
+            raise ValueError("Feature set and target must be using the same processor")
+
+        # target.task = model.task
+        model = session.get(models.Model, self.model_id)
+        if target.task != model.task:
+            raise ValueError("Target and model must have the same task")
 
         model = session.get(models.Model, self.model_id)
         self.model_state = model.content
@@ -148,33 +155,67 @@ class Experiment(sqlm.SQLModel, table=True):
             sink = session.get(sinks.Sink, self.sink_id)
             processor = session.get(processors.Processor, target.processor_id)
 
-        processor.execute(
-            f"""
-DROP VIEW IF EXISTS predictions_{self.id};
-DROP VIEW IF EXISTS predictions_raw_{self.id};
-DROP SOURCE IF EXISTS predictions_src_{self.id};
+        if target.task == tasks.TaskEnum.binary_clf.value:
 
-CREATE MATERIALIZED SOURCE predictions_src_{self.id}
-FROM KAFKA BROKER '{sink.url}' TOPIC 'predictions_{self.id}'
-KEY FORMAT BYTES
-VALUE FORMAT BYTES
-INCLUDE KEY AS key;
+            processor.execute(
+                f"""
+    DROP VIEW IF EXISTS predictions_{self.id};
+    DROP VIEW IF EXISTS predictions_raw_{self.id};
+    DROP SOURCE IF EXISTS predictions_src_{self.id};
 
-CREATE VIEW predictions_raw_{self.id} AS (
-    SELECT
-        CONVERT_FROM(key, 'utf8') AS key,
-        CAST(CONVERT_FROM(data, 'utf8') AS JSONB) AS prediction
-    FROM predictions_src_{self.id}
-);
+    CREATE MATERIALIZED SOURCE predictions_src_{self.id}
+    FROM KAFKA BROKER '{sink.url}' TOPIC 'predictions_{self.id}'
+    KEY FORMAT BYTES
+    VALUE FORMAT BYTES
+    INCLUDE KEY AS key;
 
-CREATE VIEW predictions_{self.id} AS (
-    SELECT
-        key,
-        CAST(prediction ->> 'feature_set' AS JSONB) AS feature_set,
-        CAST(prediction ->> 'prediction' AS JSONB) AS prediction
-    FROM predictions_raw_{self.id}
-)"""
-        )
+    CREATE VIEW predictions_raw_{self.id} AS (
+        SELECT
+            CONVERT_FROM(key, 'utf8') AS key,
+            CAST(CONVERT_FROM(data, 'utf8') AS JSONB) AS prediction
+        FROM predictions_src_{self.id}
+    );
+
+    CREATE VIEW predictions_{self.id} AS (
+        SELECT
+            key,
+            CAST(prediction ->> 'feature_set' AS JSONB) AS feature_set,
+            CAST(prediction ->> 'prediction' AS JSONB) AS prediction
+        FROM predictions_raw_{self.id}
+    )"""
+            )
+
+        elif target.task == tasks.TaskEnum.regression:
+            processor.execute(
+                f"""
+    DROP VIEW IF EXISTS predictions_{self.id};
+    DROP VIEW IF EXISTS predictions_raw_{self.id};
+    DROP SOURCE IF EXISTS predictions_src_{self.id};
+
+    CREATE MATERIALIZED SOURCE predictions_src_{self.id}
+    FROM KAFKA BROKER '{sink.url}' TOPIC 'predictions_{self.id}'
+    KEY FORMAT BYTES
+    VALUE FORMAT BYTES
+    INCLUDE KEY AS key;
+
+    CREATE VIEW predictions_raw_{self.id} AS (
+        SELECT
+            CONVERT_FROM(key, 'utf8') AS key,
+            CAST(CONVERT_FROM(data, 'utf8') AS FLOAT) AS prediction
+        FROM predictions_src_{self.id}
+    );
+
+    CREATE VIEW predictions_{self.id} AS (
+        SELECT
+            key,
+            CAST(prediction ->> 'feature_set' AS JSONB) AS feature_set,
+            prediction
+        FROM predictions_raw_{self.id}
+    )"""
+            )
+
+        else:
+            raise NotImplementedError
 
     def create_performance_view(self):
 
@@ -183,33 +224,58 @@ CREATE VIEW predictions_{self.id} AS (
             sink = session.get(sinks.Sink, self.sink_id)
             processor = session.get(processors.Processor, target.processor_id)
 
-        processor.execute(
-            f"""
-CREATE VIEW performance_{self.id} AS (
-    SELECT
-        COALESCE((tn + tp) / NULLIF(total::FLOAT, 0), 0) AS accuracy,
-        COALESCE(tp / NULLIF((tp + fn)::FLOAT, 0), 0) AS recall,
-        COALESCE(tp / NULLIF((tp + fp)::FLOAT, 0), 0) AS precision
-    FROM (
-        -- Confusion matrix
+        if target.task == tasks.TaskEnum.binary_clf.value:
+
+            processor.execute(
+                f"""
+    CREATE VIEW performance_{self.id} AS (
         SELECT
-            COUNT(*) FILTER (WHERE y_pred AND y_true) AS tp,
-            COUNT(*) FILTER (WHERE y_pred AND NOT y_true) AS fp,
-            COUNT(*) FILTER (WHERE NOT y_pred AND NOT y_true) AS tn,
-            COUNT(*) FILTER (WHERE NOT y_pred AND y_true) AS fn,
-            COUNT(*) AS total
+            COALESCE((tn + tp) / NULLIF(total::FLOAT, 0), 0) AS accuracy,
+            COALESCE(tp / NULLIF((tp + fn)::FLOAT, 0), 0) AS recall,
+            COALESCE(tp / NULLIF((tp + fp)::FLOAT, 0), 0) AS precision
+        FROM (
+            -- Confusion matrix
+            SELECT
+                COUNT(*) FILTER (WHERE y_pred AND y_true) AS tp,
+                COUNT(*) FILTER (WHERE y_pred AND NOT y_true) AS fp,
+                COUNT(*) FILTER (WHERE NOT y_pred AND NOT y_true) AS tn,
+                COUNT(*) FILTER (WHERE NOT y_pred AND y_true) AS fn,
+                COUNT(*) AS total
+            FROM (
+                -- Labels <> predictions
+                SELECT
+                    y.{target.target_field} AS y_true,
+                    CAST(p.prediction ->> 'true' AS FLOAT) > 0.5 AS y_pred
+                FROM predictions_{self.id} p
+                INNER JOIN {target.name} y ON
+                    y.{target.key_field} = CAST(p.key AS INTEGER)
+            )
+        )
+    )"""
+            )
+
+        elif target.task == tasks.TaskEnum.regression:
+
+            processor.execute(
+                f"""
+    CREATE VIEW performance_{self.id} AS (
+        SELECT
+            AVG(POW(y_true - y_pred, 2) AS mse,
+            AVG(ABS(y_true - y_pred)) AS mae
         FROM (
             -- Labels <> predictions
             SELECT
                 y.{target.target_field} AS y_true,
-                CAST(p.prediction ->> 'true' AS FLOAT) > 0.5 AS y_pred
+                CAST(p.prediction ->> 'true' AS FLOAT) AS y_pred
             FROM predictions_{self.id} p
             INNER JOIN {target.name} y ON
                 y.{target.key_field} = CAST(p.key AS INTEGER)
         )
-    )
-)"""
-        )
+    )"""
+            )
+
+        else:
+            raise NotImplementedError
 
 
 @router.post("/")
