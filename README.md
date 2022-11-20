@@ -9,7 +9,7 @@
 ## 👋 Introduction
 
 <div align="center" >
-  <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="33%" align="right" style="margin-left: 1em; margin-bottom: 1em;" />
+  <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="20%" align="right" style="margin-left: 1.5em; margin-bottom: 1.5em;" />
 </div>
 
 Beaver is...
