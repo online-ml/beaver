@@ -1,13 +1,16 @@
 <template>
   <div>
-    <h1>Sources - {{ source.id }}</h1>
-    <code>{{ source }}</code>
+    <h2>{{ source['name'] }}</h2>
+    <ul>
+      <li>Protocol: {{ source['protocol'] }}</li>
+      <li>DSN: <code>{{ source['url'] }}</code></li>
+    </ul>
   </div>
 </template>
 
 <script setup>
 const route = useRoute();
 const { data: source } = await useFetch(
-  `http://api:8000/api/sources/${route.params.id}`
+  `http://localhost:8000/api/sources/${route.params.id}`
 );
 </script>

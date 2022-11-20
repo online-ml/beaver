@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h1>Experiments</h1>
     <table>
       <tr>
         <th>Name</th>
@@ -18,6 +17,6 @@
 
 <script setup>
 const { data: experiments } = await useFetch(
-  "http://api:8000/api/experiments"
+  "http://localhost:8000/api/experiments"
 );
 </script>

@@ -12,6 +12,8 @@ class Sink(sqlm.SQLModel, table=True):
     protocol: str
     url: str
 
+    experiments: list["Experiment"] = sqlm.Relationship(back_populates="sink")
+
 
 @router.post("/")
 def create_sink(sink: Sink):
@@ -25,8 +27,7 @@ def create_sink(sink: Sink):
 @router.get("/", response_model=list[Sink])
 def read_sinks(offset: int = 0, limit: int = fastapi.Query(default=100, lte=100)):
     with db.session() as session:
-        sinks = session.exec(sqlm.select(Sink).offset(offset).limit(limit)).all()
-        return sinks
+        return session.exec(sqlm.select(Sink).offset(offset).limit(limit)).all()
 
 
 @router.get("/{sink_id}")

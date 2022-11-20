@@ -26,8 +26,7 @@ def create_source(source: Source):
 @router.get("/", response_model=list[Source])
 def read_sources(offset: int = 0, limit: int = fastapi.Query(default=100, lte=100)):
     with db.session() as session:
-        sources = session.exec(sqlm.select(Source).offset(offset).limit(limit)).all()
-        return sources
+        return session.exec(sqlm.select(Source).offset(offset).limit(limit)).all()
 
 
 @router.get("/{source_id}")

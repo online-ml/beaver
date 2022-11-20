@@ -12,6 +12,8 @@ class Runner(sqlm.SQLModel, table=True):
     protocol: str
     url: str
 
+    experiments: list["Experiment"] = sqlm.Relationship(back_populates="runner")
+
 
 @router.post("/")
 def create_runner(runner: Runner):
@@ -25,8 +27,7 @@ def create_runner(runner: Runner):
 @router.get("/", response_model=list[Runner])
 def read_runners(offset: int = 0, limit: int = fastapi.Query(default=100, lte=100)):
     with db.session() as session:
-        runners = session.exec(sqlm.select(Runner).offset(offset).limit(limit)).all()
-        return runners
+        return session.exec(sqlm.select(Runner).offset(offset).limit(limit)).all()
 
 
 @router.get("/{runner_id}")

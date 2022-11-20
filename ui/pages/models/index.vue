@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h1>Models</h1>
     <table>
       <tr>
         <th>Name</th>
@@ -15,5 +14,5 @@
 </template>
 
 <script setup>
-const { data: models } = await useFetch("http://api:8000/api/models");
+const { data: models } = await useFetch("http://localhost:8000/api/models");
 </script>

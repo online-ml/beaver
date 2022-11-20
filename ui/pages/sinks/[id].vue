@@ -1,13 +1,16 @@
 <template>
   <div>
-    <h1>Sinks - {{ sink.id }}</h1>
-    <code>{{ sink }}</code>
+    <h2>{{ sink['name'] }}</h2>
+    <ul>
+      <li>Protocol: {{ sink['protocol'] }}</li>
+      <li>DSN: <code>{{ sink['url'] }}</code></li>
+    </ul>
   </div>
 </template>
 
 <script setup>
 const route = useRoute();
 const { data: sink } = await useFetch(
-  `http://api:8000/api/sinks/${route.params.id}`
+  `http://localhost:8000/api/sinks/${route.params.id}`
 );
 </script>

@@ -1,13 +1,16 @@
 <template>
   <div>
-    <h1>Processors - {{ processor.id }}</h1>
-    <code>{{ processor }}</code>
+    <h2>{{ processor['name'] }}</h2>
+    <ul>
+      <li>Protocol: {{ processor['protocol'] }}</li>
+      <li>DSN: <code>{{ processor['url'] }}</code></li>
+    </ul>
   </div>
 </template>
 
 <script setup>
 const route = useRoute();
 const { data: processor } = await useFetch(
-  `http://api:8000/api/processors/${route.params.id}`
+  `http://localhost:8000/api/processors/${route.params.id}`
 );
 </script>
