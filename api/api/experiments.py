@@ -267,7 +267,6 @@ def monitor_experiment(experiment_id: int):
         )["n"]
         return {
             "now": dt.datetime.now().isoformat(),
-            "experiment.n_samples_trained_on": experiment.n_samples_trained_on,
             "training_progress": experiment.n_samples_trained_on / n_samples
             if n_samples
             else 0,

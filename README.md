@@ -1,28 +1,30 @@
 <h1>🦫 Beaver — MLOps for (online) machine learning</h1>
 
-- [Introduction](#introduction)
-- [Installation](#installation)
-  - [Docker](#docker)
-  - [Python package](#python-package)
-- [Usage](#usage)
-- [Examples](#examples)
-- [License](#license)
+- [👋 Introduction](#-introduction)
+- [🤱 Getting started](#-getting-started)
+- [👐 Examples](#-examples)
+- [🚀 Deployment](#-deployment)
+- [📝 License](#-license)
 
-## Introduction
+## 👋 Introduction
 
 <div align="center" >
   <img src="digital_art.png" width="33%" align="right" />
 </div>
 
-Beaver is a system to deploy and maintain machine learning models. It is **designed for online machine learning models**. But it **also works with batch models** if all you want to do is inference and performance monitoring.
+Beaver is...
 
-We want to provide a piece of software which takes care of the boring stuff, can be plugged into existing systems, and is fun to use.
+✨ The whole package: it's a framework to develop, deploy, and maintain machine learning models.
 
-More about Beaver [here](ABOUT.md).
+🍥 Online-first: it is designed for online machine learning models, while also supporting batch models.
 
-## Installation
+☝️ [Opinionated](https://www.youtube.com/watch?v=nzFTmJnIakk&list=PLIU25-FciwNaz5PqWPiHmPCMOFYoEsJ8c&index=5): it encourages you to [process data in SQL](https://www.ethanrosenthal.com/2022/05/10/database-bundling/) and build models with Python.
 
-### Docker
+🔋 Batteries included: it provides basic infrastructure and monitoring by default.
+
+🐢 [Interfaces all the way down](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/): you can plug in your existing message bus, stream processor, model store, etc.
+
+## 🤱 Getting started
 
 The easiest way is to run the provided `docker-compose.yaml`.
 
@@ -32,39 +34,9 @@ cd beaver
 docker-compose up
 ```
 
-### Python package
-
-You can also just install the `beaver` Python package.
-
-```sh
-pip install git+https://github.com/online-ml/beaver
-```
-
-Then it's up to you to handle the rest. The first thing to do is create a `Dam`:
+Go to [localhost:3000](http://localhost:3000/) to check out the UI. This is a read-only interface. Interacting with the system happens through an API.
 
 ```py
-import beaver
-
-dam = beaver.Dam(
-    model_store=beaver.model_store.ShelveModelStore('~Downloads'),
-    data_store=beaver.data_store.SQLDataStore('sqlite:///db.sqlite'),
-    training_regimes=[beaver.training.Regime.ASAP]
-)
-dam.build()
-```
-
-The `build` method makes sure each component is ready to be used. Assuming the above code is in a file named `server.py`, you may then start an HTTP server by leveraging FastAPI:
-
-```py
-uvicorn server:dam.http_server --port 3000
-```
-
-## Usage
-
-Once it's running, you can talk to the server over HTTP:
-
-```py
-import beaver
 from river import linear_model
 
 model = linear_model.LogisticRegression()
@@ -73,10 +45,14 @@ client = beaver.HTTPClient(host='http://127.0.0.1:3000')
 client.models.upload('my_model', model)
 ```
 
-## Examples
+## 👐 Examples
 
 - [🚕 Taxis](examples/taxis)
 
-## License
+## 🚀 Deployment
+
+🚧
+
+## 📝 License
 
 Beaver is free and open-source software licensed under the [3-clause BSD license](LICENSE).
