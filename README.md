@@ -1,5 +1,9 @@
 <h1>🦫 Beaver — MLOps for (online) machine learning</h1>
 
+<div align="center" >
+  <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
+</div>
+
 - [👋 Introduction](#-introduction)
 - [🤱 Getting started](#-getting-started)
 - [👐 Examples](#-examples)
@@ -7,10 +11,6 @@
 - [📝 License](#-license)
 
 ## 👋 Introduction
-
-<div style="margin-left: 1.5em; margin-bottom: 1.5em;" >
-  <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
-</div>
 
 Beaver is...
 
