@@ -14,15 +14,15 @@
 
 Beaver is...
 
-✨ *The whole package* • it's a framework to develop, deploy, and maintain machine learning models. Including feature engineering.
+🍱 *The whole package* • it's a framework to develop, deploy, and maintain machine learning models. Including feature engineering.
 
-🍥 **Online-first** • it is designed for online machine learning models, while also supporting batch models.
+🍥 *Online-first* • it is designed for online machine learning models, while also supporting batch models.
 
-☝️ [**Opinionated**](https://www.youtube.com/watch?v=nzFTmJnIakk&list=PLIU25-FciwNaz5PqWPiHmPCMOFYoEsJ8c&index=5): it encourages you to [process data in SQL](https://www.ethanrosenthal.com/2022/05/10/database-bundling/) and build models with Python.
+☝️ [*Opinionated*](https://www.youtube.com/watch?v=nzFTmJnIakk&list=PLIU25-FciwNaz5PqWPiHmPCMOFYoEsJ8c&index=5) • it encourages you to [process data in SQL](https://www.ethanrosenthal.com/2022/05/10/database-bundling/) and build models with Python.
 
-🔋 **Batteries included**: it provides basic infrastructure and monitoring by default.
+🔋 *Batteries included* • it provides basic infrastructure and monitoring by default.
 
-🐢 [**Interfaces all the way down**](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/): you can plug in your existing message broker, stream processor, model store, etc. At least, that's the idea.
+🐢 [*Interfaces all the way down*](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/) • you can plug in your existing message broker, stream processor, model store, etc. At least, that's the idea.
 
 ## 🤱 Getting started
 
