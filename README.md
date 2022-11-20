@@ -14,7 +14,7 @@
 
 Beaver is...
 
-✨ **The whole package** ■ it's a framework to develop, deploy, and maintain machine learning models. Including feature engineering.
+✨ *The whole package* • it's a framework to develop, deploy, and maintain machine learning models. Including feature engineering.
 
 🍥 **Online-first** • it is designed for online machine learning models, while also supporting batch models.
 
