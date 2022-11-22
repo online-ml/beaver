@@ -1,6 +1,6 @@
 <h1>🦫 Beaver • MLOps for (online) machine learning</h1>
 
-**🚧 Beaver is not yet meant to be used seriously. But feel free to use for inspiration and educative purposes 🏗**
+**🚧 The purpose of Beaver is to package [this](https://github.com/MaxHalford/taxi-demo-rp-mz-rv-rd-st) proof-of-concept. Beaver is not yet meant to be used seriously. Feel welcome to use it for inspiration and educative purposes though 🏗**
 
 <div align="center" >
   <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
@@ -24,7 +24,7 @@ Beaver is...
 
 ## 🤱 Getting started
 
-The easiest way is to run the provided `docker-compose.yaml` 🐳
+The easiest way is to run the provided [`docker-compose.yaml`](docker-compose.yaml) 🐳
 
 ```sh
 git clone https://github.com/online-ml/beaver
@@ -32,24 +32,17 @@ cd beaver
 docker-compose up
 ```
 
-Go to [http://localhost:3000)](http://localhost:3000/) to check out the UI. This is a read-only interface. Interacting with the system happens through an API.
+Go to [http://localhost:3000](http://localhost:3000/) to check out the UI. This is a read-only interface. Interacting with the system happens through an API.
 
-```py
-from river import linear_model
+The recommended next step is to move on to the examples. That will give you an understanding of the workflow which Beaver enables.
 
-model = linear_model.LogisticRegression()
-
-client = beaver.HTTPClient(host='http://127.0.0.1:3000')
-client.models.upload('my_model', model)
-```
-
-## 👐 Examples
+## 👀 Examples
 
 - [🚕 Taxis](examples/taxis)
 
 ## 🚀 Deployment
 
-🚧
+The `docker-compose.yaml` file is meant for development. You'll want to edit it if you're looking to deploy Beaver.
 
 ## 📝 License
 

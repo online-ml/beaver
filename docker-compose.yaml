@@ -78,18 +78,18 @@ services:
       - materialize
       - celery
 
-  # ui:
-  #   build: ui
-  #   volumes:
-  #     - ./ui:/code
-  #     - node_modules:/code/node_modules
-  #   environment:
-  #     NUXT_HOST: 0.0.0.0
-  #   command: yarn run dev
-  #   ports:
-  #     - 3000:3000
-  #   depends_on:
-  #     - api
+  ui:
+    build: ui
+    volumes:
+      - ./ui:/code
+      - node_modules:/code/node_modules
+    environment:
+      HOST: 0.0.0.0
+    command: yarn run dev
+    ports:
+      - 3000:3000
+    depends_on:
+      - api
 
 volumes:
   postgres:

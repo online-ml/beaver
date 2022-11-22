@@ -30,7 +30,7 @@ if __name__ == "__main__":
     now = next(iter(taxis))[0]["pickup_datetime"]
     predictions = {}
 
-    # Delete topics for idempotency
+    # Empty topics for idempotency
     broker_admin = kafka.admin.KafkaAdminClient(bootstrap_servers=["localhost:9092"])
     for topic_name in ["taxi-departures", "taxi-arrivals"]:
         try:
@@ -76,6 +76,7 @@ if __name__ == "__main__":
         now = arrival_time
 
         # Send the label
+        print(trip_no, {"arrival_time": arrival_time.isoformat(), "duration": duration})
         broker.send(
             topic="taxi-arrivals",
             key=trip_no,
