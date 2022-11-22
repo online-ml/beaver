@@ -49,7 +49,7 @@ def run_inference(experiment_id):
                 model_obj = dill.loads(model_state)
             model_last_fetched_at = now
 
-        prediction = model_obj.predict_proba_one(x)
+        prediction = model_obj.predict(x)
         producer.send(
             topic=f"predictions_{experiment_id}",
             key=str(key),
@@ -85,7 +85,7 @@ def run_training(experiment_id):
     n_samples_trained_on = 0
 
     for sample in processor.stream(f"learning_queue_{experiment_id}"):
-        model_obj.learn_one(sample["feature_set"], sample["ground_truth"])
+        model_obj.learn(sample["feature_set"], sample["ground_truth"])
         n_samples_trained_on += 1
 
         # Dump models every 30 seconds
@@ -144,7 +144,8 @@ class Experiment(sqlm.SQLModel, table=True):
         self.create_predictions_view()
         self.create_performance_view()
         run_inference.delay(self.id)
-        run_training.delay(self.id)
+        if hasattr(dill.loads(model.content), "learn"):
+            run_training.delay(self.id)
 
         return self
 
@@ -186,6 +187,33 @@ class Experiment(sqlm.SQLModel, table=True):
             )
 
         elif target.task == tasks.TaskEnum.regression:
+            print(
+                f"""
+    DROP VIEW IF EXISTS predictions_{self.id};
+    DROP VIEW IF EXISTS predictions_raw_{self.id};
+    DROP SOURCE IF EXISTS predictions_src_{self.id};
+
+    CREATE MATERIALIZED SOURCE predictions_src_{self.id}
+    FROM KAFKA BROKER '{sink.url}' TOPIC 'predictions_{self.id}'
+    KEY FORMAT BYTES
+    VALUE FORMAT BYTES
+    INCLUDE KEY AS key;
+
+    CREATE VIEW predictions_raw_{self.id} AS (
+        SELECT
+            CONVERT_FROM(key, 'utf8') AS key,
+            CAST(CONVERT_FROM(data, 'utf8') AS FLOAT) AS prediction
+        FROM predictions_src_{self.id}
+    );
+
+    CREATE VIEW predictions_{self.id} AS (
+        SELECT
+            key,
+            CAST(prediction ->> 'feature_set' AS JSONB) AS feature_set,
+            prediction
+        FROM predictions_raw_{self.id}
+    )"""
+            )
             processor.execute(
                 f"""
     DROP VIEW IF EXISTS predictions_{self.id};

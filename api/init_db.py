@@ -28,16 +28,18 @@ if __name__ == "__main__":
 
         session.add(
             sources.Source(
-                name="Default source", protocol="Redpanda", url="default_broker:9092"
+                name="Default source", protocol="Redpanda", url="redpanda:29092"
             )
         )
         while True:
+            # Keep trying to connect to the broker
             try:
                 message_bus_admin = kafka.admin.KafkaAdminClient(
-                    bootstrap_servers=["default_broker:9092"]
+                    bootstrap_servers=["redpanda:29092"]
                 )
                 break
             except kafka.errors.NodeNotReadyError:
+                print("Waiting for Redpanda...")
                 ...
 
         for topic_name in ["examples-phishing"]:
@@ -45,12 +47,8 @@ if __name__ == "__main__":
                 message_bus_admin.delete_topics([topic_name])
             except kafka.errors.UnknownTopicOrPartitionError:
                 ...
-            topic = kafka.admin.NewTopic(
-                name=topic_name, num_partitions=3, replication_factor=1
-            )
-            message_bus_admin.create_topics([topic])
         message_bus = kafka.KafkaProducer(
-            bootstrap_servers=["default_broker:9092"],
+            bootstrap_servers=["redpanda:29092"],
             key_serializer=str.encode,
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
         )
@@ -67,7 +65,7 @@ if __name__ == "__main__":
         processor = processors.Processor(
             name="Default processor",
             protocol="Materialize",
-            url="postgresql://materialize@default_processor:6875/materialize?sslmode=disable",
+            url="postgresql://materialize@materialize:6875/materialize?sslmode=disable",
         )
         session.add(processor)
         session.commit()
@@ -88,7 +86,9 @@ if __name__ == "__main__":
         # RUNNERS
 
         runner = runners.Runner(
-            name="Default runner", protocol="Starlette", url="localhost:3000"
+            name="Default runner",
+            protocol="Celery on Redis",
+            url="redis://redis:6379/0",
         )
         session.add(runner)
         session.commit()
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         # SINKS
 
         sink = sinks.Sink(
-            name="Default sink", protocol="Redpanda", url="default_broker:9092"
+            name="Default sink", protocol="Redpanda", url="redpanda:29092"
         )
         session.add(sink)
 
@@ -113,12 +113,13 @@ if __name__ == "__main__":
 
         # MODELS
 
+        model_obj = preprocessing.StandardScaler() | linear_model.LogisticRegression()
+        model_obj.learn = model_obj.learn_one
+        model_obj.predict = model_obj.predict_proba_one
         model = models.Model(
             name="Logistic regression",
             task=tasks.TaskEnum.binary_clf,
-            content=dill.dumps(
-                preprocessing.StandardScaler() | linear_model.LogisticRegression()
-            ),
+            content=dill.dumps(model_obj),
         )
         session.add(model)
         session.commit()
@@ -129,7 +130,7 @@ if __name__ == "__main__":
         feature_set = feature_sets.FeatureSet(
             name="phishing_features",
             query="""CREATE MATERIALIZED SOURCE examples_phishing
-FROM KAFKA BROKER 'default_broker:9092' TOPIC 'examples-phishing'
+FROM KAFKA BROKER 'redpanda:29092' TOPIC 'examples-phishing'
     KEY FORMAT BYTES
     VALUE FORMAT BYTES
     INCLUDE KEY AS row_id;

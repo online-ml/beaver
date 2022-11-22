@@ -1,3 +1,4 @@
+import base64
 import enum
 import dill
 import fastapi
@@ -11,7 +12,7 @@ router = fastapi.APIRouter()
 
 class Model(sqlm.SQLModel, table=True):
     id: int | None = sqlm.Field(default=None, primary_key=True)
-    name: str
+    name: str = sqlm.Field(unique=True)
     task: tasks.TaskEnum
     content: bytes
 
@@ -21,10 +22,12 @@ class Model(sqlm.SQLModel, table=True):
 @router.post("/")
 def create_model(model: Model):
     with db.session() as session:
+        model_obj = dill.loads(base64.b64decode(model.content.decode("ascii")))
+        model.content = dill.dumps(model_obj)
         session.add(model)
         session.commit()
         session.refresh(model)
-        return model
+        return {"id": model.id}
 
 
 @router.get("/")
@@ -46,5 +49,6 @@ def read_model(model_id: int):
             "name": model.name,
             "task": model.task,
             "class": f"{model_obj.__module__}.{model_obj.__class__.__name__}",
+            "has_learn_method": hasattr(model_obj, "learn"),
             "repr": repr(model_obj),
         }

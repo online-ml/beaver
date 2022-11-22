@@ -1,7 +1,7 @@
 version: '3'
 services:
 
-  db:
+  postgres:
     image: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -13,28 +13,27 @@ services:
       - 5432:5432
     restart: unless-stopped
 
-  default_broker:
-    image: docker.vectorized.io/vectorized/redpanda:v21.9.5
+  redpanda:
+    image: docker.redpanda.com/vectorized/redpanda:v22.2.2
     command:
-     - redpanda start
-     - --overprovisioned
-     - --smp 1
-     - --memory 1G
-     - --reserve-memory 0M
-     - --node-id 0
-     - --check=false
-     - --kafka-addr 0.0.0.0:9092
-     - --advertise-kafka-addr default_broker:9092
-     - --pandaproxy-addr 0.0.0.0:8082
-     - --advertise-pandaproxy-addr default_broker:8082
+      - redpanda start
+      - --smp 1
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr localhost:8082
     environment:
       - AUTO_CREATE_TOPICS_ENABLED=true
     ports:
-     - 9092:9092
-     - 8081:8081
-     - 8082:8082
+      - 8081:8081
+      - 8082:8082
+      - 9092:9092
+      - 9644:9644
+      - 29092:29092
 
-  default_processor:
+  materialize:
     image: materialize/materialized:v0.12.0
     container_name: materialize
     command: -w1 --disable-telemetry
@@ -49,21 +48,21 @@ services:
     ports:
       - 6379:6379
 
-  default_runner:
+  celery:
     build: api
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
     command: celery -A api.experiments worker
     depends_on:
       - redis
-      - db
-      - default_broker
-      - default_processor
+      - postgres
+      - redpanda
+      - materialize
 
   api:
     build: api
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
     ports:
       - 8000:8000
     volumes:
@@ -74,10 +73,10 @@ services:
         uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /code
       "
     depends_on:
-      - db
-      - default_broker
-      - default_processor
-      - default_runner
+      - postgres
+      - redpanda
+      - materialize
+      - celery
 
   # ui:
   #   build: ui

@@ -35,7 +35,7 @@ class FeatureSet(sqlm.SQLModel, table=True):
 @router.post("/")
 def create_feature_set(feature_set: FeatureSet):
     with db.session() as session:
-        return feature_sets.create(session)
+        return feature_set.create(session)
 
 
 @router.get("/")

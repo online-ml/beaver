@@ -13,7 +13,7 @@ docker compose up --build -d
 docker stats
 
 # Follow the logs for a particular service
-docker compose logs default_runner -f
+docker compose logs celery -f
 
 # Stop
 docker compose down

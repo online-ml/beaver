@@ -3,7 +3,7 @@ import datetime as dt
 import json
 import time
 
-import beaver
+import kafka
 from river import datasets
 from river import metrics
 from river import stream
@@ -17,9 +17,6 @@ class colors:
 
 if __name__ == "__main__":
 
-    client = beaver.HTTPClient(host="http://127.0.0.1:3000")
-    client._request("POST", f"_clear/data-store")  # for idempotency
-
     parser = argparse.ArgumentParser()
     parser.add_argument("speed", type=int, nargs="?", default=1)
     args = parser.parse_args()
@@ -32,6 +29,20 @@ if __name__ == "__main__":
     taxis = datasets.Taxis()
     now = next(iter(taxis))[0]["pickup_datetime"]
     predictions = {}
+
+    # Delete topics for idempotency
+    broker_admin = kafka.admin.KafkaAdminClient(bootstrap_servers=["localhost:9092"])
+    for topic_name in ["taxi-departures", "taxi-arrivals"]:
+        try:
+            broker_admin.delete_topics([topic_name])
+        except kafka.errors.UnknownTopicOrPartitionError:
+            ...
+
+    broker = kafka.KafkaProducer(
+        bootstrap_servers=["localhost:9092"],
+        key_serializer=str.encode,
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    )
 
     for trip_no, trip, duration in stream.simulate_qa(
         taxis,
@@ -48,14 +59,10 @@ if __name__ == "__main__":
             sleep(trip["pickup_datetime"] - now)
             now = trip["pickup_datetime"]
 
-            # Get a prediction
-            predictions[trip_no] = client.predict(
-                event={
-                    **trip,
-                    "pickup_datetime": trip["pickup_datetime"].isoformat(),
-                },
-                model_name="Linear regression",
-                loop_id=trip_no,
+            broker.send(
+                topic="taxi-departures",
+                key=trip_no,
+                value={**trip, "pickup_datetime": trip["pickup_datetime"].isoformat()},
             )
 
             print(colors.GREEN + f"#{trip_no} departs at {now}" + colors.ENDC)
@@ -69,13 +76,12 @@ if __name__ == "__main__":
         now = arrival_time
 
         # Send the label
-        client.label(loop_id=trip_no, label=duration)
+        broker.send(
+            topic="taxi-arrivals",
+            key=trip_no,
+            value={"arrival_time": arrival_time.isoformat(), "duration": duration},
+        )
 
         # Notify arrival and compare prediction against ground truth
-        yt = dt.timedelta(seconds=duration)
-        yp = dt.timedelta(seconds=round(predictions.pop(trip_no)["content"]))
-        print(
-            colors.BLUE
-            + f"#{trip_no} arrives at {now}, took {yt}, predicted {yp}"
-            + colors.ENDC
-        )
+        td = dt.timedelta(seconds=duration)
+        print(colors.BLUE + f"#{trip_no} arrives at {now}, took {td}" + colors.ENDC)
