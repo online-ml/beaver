@@ -1,3 +1,6 @@
 dill
+kafka-python
+psycopg[binary]
+pandas
 requests
 river

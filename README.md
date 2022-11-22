@@ -1,34 +1,30 @@
-<h1>🦫 Beaver — MLOps for (online) machine learning</h1>
+<h1>🦫 Beaver • MLOps for (online) machine learning</h1>
 
-- [Introduction](#introduction)
-- [Installation](#installation)
-  - [Docker](#docker)
-  - [Python package](#python-package)
-- [Usage](#usage)
-- [Examples](#examples)
-- [Deployment](#deployment)
-  - [Docker](#docker-1)
-  - [Helm chart](#helm-chart)
-- [Development](#development)
-- [License](#license)
-
-## Introduction
+**🚧 The purpose of Beaver is to package [this](https://github.com/MaxHalford/taxi-demo-rp-mz-rv-rd-st) proof-of-concept. Beaver is not yet meant to be used seriously. Feel welcome to use it for inspiration and educative purposes though 🏗**
 
 <div align="center" >
-  <img src="digital_art.png" width="33%" align="right" />
+  <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
 </div>
 
-Beaver is a system to deploy and maintain machine learning models. It is **designed for online machine learning models**. But it **also works with batch models** if all you want to do is inference and performance monitoring.
+## 👋 Introduction
 
-We want to provide a piece of software which takes care of the boring stuff, can be plugged into existing systems, and is fun to use.
+Beaver is...
 
-More about Beaver [here](ABOUT.md).
+🍱 [*The whole package*](https://www.youtube.com/watch?v=nzFTmJnIakk&list=PLIU25-FciwNaz5PqWPiHmPCMOFYoEsJ8c&index=5) • it's a framework to develop, deploy, and maintain machine learning models. Including feature engineering.
 
-## Installation
+🤟 *Straightforward* • there's a UI to see stuff, and an API to do stuff.
 
-### Docker
+🍥 *Online-first* • it is designed for online machine learning models, while also supporting batch models.
 
-The easiest way is to run the provided `docker-compose.yaml`.
+☝️ *Opinionated* • it encourages you to [process data with SQL](https://www.ethanrosenthal.com/2022/05/10/database-bundling/) and build models in Python.
+
+🔋 *Batteries included* • default infrastructure and monitoring are provided.
+
+🐢 [*Interfaces all the way down*](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/) • you can plug in your existing message broker, stream processor, model store, etc. At least, that's the idea.
+
+## 🤱 Getting started
+
+The easiest way is to run the provided [`docker-compose.yaml`](docker-compose.yaml) 🐳
 
 ```sh
 git clone https://github.com/online-ml/beaver
@@ -36,75 +32,18 @@ cd beaver
 docker-compose up
 ```
 
-### Python package
+Go to [http://localhost:3000](http://localhost:3000/) to check out the UI. This is a read-only interface. Interacting with the system happens through an API.
 
-You can also just install the `beaver` Python package.
+The recommended next step is to move on to the examples. That will give you an understanding of the workflow which Beaver enables.
 
-```sh
-pip install git+https://github.com/online-ml/beaver
-```
-
-Then it's up to you to handle the rest. The first thing to do is create a `Dam`:
-
-```py
-import beaver
-
-dam = beaver.Dam(
-    model_store=beaver.model_store.ShelveModelStore('~Downloads'),
-    data_store=beaver.data_store.SQLDataStore('sqlite:///db.sqlite'),
-    training_regimes=[beaver.training.Regime.ASAP]
-)
-dam.build()
-```
-
-The `build` method makes sure each component is ready to be used. Assuming the above code is in a file named `server.py`, you may then start an HTTP server by leveraging FastAPI:
-
-```py
-uvicorn server:dam.http_server --port 3000
-```
-
-## Usage
-
-Once it's running, you can talk to the server over HTTP:
-
-```py
-import beaver
-from river import linear_model
-
-model = linear_model.LogisticRegression()
-
-client = beaver.HTTPClient(host='http://127.0.0.1:3000')
-client.models.upload('my_model', model)
-```
-
-## Examples
+## 👀 Examples
 
 - [🚕 Taxis](examples/taxis)
 
-## Deployment
+## 🚀 Deployment
 
-### Docker
+The `docker-compose.yaml` file is meant for development. You'll want to edit it if you're looking to deploy Beaver.
 
-```sh
-docker build -t beaver .
-docker run -it -p 3000:3000 beaver
-```
-
-### Helm chart
-
-Coming soon.
-
-## Development
-
-```sh
-git clone https://github.com/online-ml/beaver
-cd beaver
-pip install poetry
-poetry install
-poetry shell
-pytest
-```
-
-## License
+## 📝 License
 
 Beaver is free and open-source software licensed under the [3-clause BSD license](LICENSE).

@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["Max Halford <maxhalford25@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.86.0"
+sqlmodel = "^0.0.8"
+uvicorn = "^0.19.0"
+kafka-python = "^2.0.2"
+dill = "^0.3.6"
+psycopg = {extras = ["binary"], version = "^3.1.4"}
+psycopg2 = "^2.9.5"
+celery = {extras = ["redis"], version = "^5.2.7"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

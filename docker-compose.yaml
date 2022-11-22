@@ -1,15 +1,96 @@
 version: '3'
 services:
-  app:
-    build: .
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+
+  redpanda:
+    image: docker.redpanda.com/vectorized/redpanda:v22.2.2
+    command:
+      - redpanda start
+      - --smp 1
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr localhost:8082
+    environment:
+      - AUTO_CREATE_TOPICS_ENABLED=true
+    ports:
+      - 8081:8081
+      - 8082:8082
+      - 9092:9092
+      - 9644:9644
+      - 29092:29092
+
+  materialize:
+    image: materialize/materialized:v0.12.0
+    container_name: materialize
+    command: -w1 --disable-telemetry
+    ports:
+      - 6875:6875
+
+  redis:
+    image: 'bitnami/redis:latest'
+    container_name: redis
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+
+  celery:
+    build: api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+    command: celery -A api.experiments worker
+    depends_on:
+      - redis
+      - postgres
+      - redpanda
+      - materialize
+
+  api:
+    build: api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+    ports:
+      - 8000:8000
+    volumes:
+      - ./api:/code
+    command: >
+      bash -c "
+        python init_db.py &&
+        uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /code
+      "
+    depends_on:
+      - postgres
+      - redpanda
+      - materialize
+      - celery
+
+  ui:
+    build: ui
+    volumes:
+      - ./ui:/code
+      - node_modules:/code/node_modules
+    environment:
+      HOST: 0.0.0.0
+    command: yarn run dev
     ports:
       - 3000:3000
-    volumes:
-      - .:/app
-    command:
-      [
-        "--reload",
-        "--reload-dir",
-        "/app",
-        "examples.wsgi:dam.http_server"
-      ]
+    depends_on:
+      - api
+
+volumes:
+  postgres:
+  node_modules:
