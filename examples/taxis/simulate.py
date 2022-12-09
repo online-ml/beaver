@@ -76,7 +76,6 @@ if __name__ == "__main__":
         now = arrival_time
 
         # Send the label
-        print(trip_no, {"arrival_time": arrival_time.isoformat(), "duration": duration})
         broker.send(
             topic="taxi-arrivals",
             key=trip_no,
