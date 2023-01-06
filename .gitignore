@@ -1,3 +1,11 @@
+# pyenv
+.python-version
+
+# IDE
+.vscode
+.idea
+
+# Notebook
 /*.ipynb
 .ipynb_checkpoints
 *.pyc

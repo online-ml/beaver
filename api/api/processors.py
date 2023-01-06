@@ -1,20 +1,20 @@
 import fastapi
+import psycopg
+import sqlmodel as sqlm
 
 from api import db
-import sqlmodel as sqlm
-import psycopg
 
 router = fastapi.APIRouter()
 
 
-class Processor(sqlm.SQLModel, table=True):
+class Processor(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     id: int | None = sqlm.Field(default=None, primary_key=True)
     name: str
     protocol: str
     url: str
 
-    feature_sets: list["FeatureSet"] = sqlm.Relationship(back_populates="processor")
-    targets: list["Target"] = sqlm.Relationship(back_populates="processor")
+    feature_sets: list["FeatureSet"] = sqlm.Relationship(back_populates="processor")  # type: ignore[name-defined] # noqa
+    targets: list["Target"] = sqlm.Relationship(back_populates="processor")  # type: ignore[name-defined] # noqa
 
     def execute(self, sql):
         conn = psycopg.connect(self.url)

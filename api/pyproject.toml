@@ -5,6 +5,13 @@ description = ""
 authors = ["Max Halford <maxhalford25@gmail.com>"]
 readme = "README.md"
 
+[tool.poetry.dev-dependencies]
+black = "^22.8.0"
+pytest = "^7.1.3"
+pre-commit = "^2.20.0"
+mypy = "^0.991"
+pydantic = "^1.10.2"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.86.0"
@@ -15,6 +22,7 @@ dill = "^0.3.6"
 psycopg = {extras = ["binary"], version = "^3.1.4"}
 psycopg2 = "^2.9.5"
 celery = {extras = ["redis"], version = "^5.2.7"}
+river = "^0.13.0"
 
 
 [build-system]

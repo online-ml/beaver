@@ -1,18 +1,18 @@
 import fastapi
+import sqlmodel as sqlm
 
 from api import db
-import sqlmodel as sqlm
 
 router = fastapi.APIRouter()
 
 
-class Runner(sqlm.SQLModel, table=True):
+class Runner(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     id: int | None = sqlm.Field(default=None, primary_key=True)
     name: str
     protocol: str
     url: str
 
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="runner")
+    experiments: list["Experiment"] = sqlm.Relationship(back_populates="runner")  # type: ignore[name-defined] # noqa
 
 
 @router.post("/")

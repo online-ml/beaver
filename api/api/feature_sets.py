@@ -1,13 +1,12 @@
 import fastapi
-
-from api import db
-from api import processors
 import sqlmodel as sqlm
+
+from api import db, processors
 
 router = fastapi.APIRouter()
 
 
-class FeatureSet(sqlm.SQLModel, table=True):
+class FeatureSet(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     __tablename__ = "feature_set"
 
     id: int | None = sqlm.Field(default=None, primary_key=True)
@@ -17,7 +16,7 @@ class FeatureSet(sqlm.SQLModel, table=True):
 
     processor_id: int = sqlm.Field(foreign_key="processor.id")
     processor: processors.Processor = sqlm.Relationship(back_populates="feature_sets")
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="feature_set")
+    experiments: list["Experiment"] = sqlm.Relationship(back_populates="feature_set")  # type: ignore[name-defined] # noqa
 
     def create(self, session):
         processor = session.get(processors.Processor, self.processor_id)
@@ -48,8 +47,8 @@ def read_feature_set(offset: int = 0, limit: int = fastapi.Query(default=100, lt
         ).all()
 
 
-@router.get("/{feature_set_id}")
-def read_feature_set(feature_set_id: int):
+@router.get("/{feature_set_id}")  # type: ignore[no-redef]
+def read_feature_set(feature_set_id: int):  # noqa
     with db.session() as session:
         feature_set = session.get(FeatureSet, feature_set_id)
         if not feature_set:

@@ -1,22 +1,21 @@
 import base64
-import enum
+
 import dill
 import fastapi
-
-from api import db
-from api import tasks
 import sqlmodel as sqlm
+
+from api import db, tasks
 
 router = fastapi.APIRouter()
 
 
-class Model(sqlm.SQLModel, table=True):
+class Model(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     id: int | None = sqlm.Field(default=None, primary_key=True)
     name: str = sqlm.Field(unique=True)
     task: tasks.TaskEnum
     content: bytes
 
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="model")
+    experiments: list["Experiment"] = sqlm.Relationship(back_populates="model")  # type: ignore[name-defined] # noqa
 
 
 @router.post("/")

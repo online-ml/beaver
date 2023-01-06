@@ -1,15 +1,12 @@
 import fastapi
-
-from api import db
-from api import tasks
-from api import processors
-import psycopg
 import sqlmodel as sqlm
+
+from api import db, processors, tasks
 
 router = fastapi.APIRouter()
 
 
-class Target(sqlm.SQLModel, table=True):
+class Target(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     id: int | None = sqlm.Field(default=None, primary_key=True)
     name: str
     query: str
@@ -19,7 +16,7 @@ class Target(sqlm.SQLModel, table=True):
 
     processor_id: int = sqlm.Field(foreign_key="processor.id")
     processor: processors.Processor = sqlm.Relationship(back_populates="targets")
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="target")
+    experiments: list["Experiment"] = sqlm.Relationship(back_populates="target")  # type: ignore[name-defined] # noqa
 
     def create(self, session):
         processor = session.get(processors.Processor, self.processor_id)

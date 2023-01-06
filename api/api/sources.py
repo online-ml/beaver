@@ -1,13 +1,13 @@
-import kafka
 import fastapi
+import kafka
+import sqlmodel as sqlm
 
 from api import db
-import sqlmodel as sqlm
 
 router = fastapi.APIRouter()
 
 
-class Source(sqlm.SQLModel, table=True):
+class Source(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     id: int | None = sqlm.Field(default=None, primary_key=True)
     name: str
     protocol: str
