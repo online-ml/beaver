@@ -1,0 +1,72 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+          cache: 'poetry'
+      - name: Install pre-commit
+        run: poetry add pre-commit
+        working-directory: api
+      - name: Run pre-commit
+        run: poetry run pre-commit run
+        working-directory: api
+
+  test:
+    needs: code-quality
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ "3.10", "3.11" ]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up python ${{ matrix.python }}
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - name: Configure poetry
+        run: poetry config virtualenvs.in-project true
+        working-directory: api
+
+      - name: Cache the virtualenv
+        uses: actions/cache@v3
+        id: cached-venv
+        with:
+          path: ~/.venv
+          key: ${{ runner.os }}-${{ steps.setup-python.outputs.python }}-venv-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: ${{ steps.cached-venv.outputs.cache-hit != 'true' }}
+        run: poetry install --no-interaction --no-root
+        working-directory: api
+
+      - name: Install library
+        run: poetry install --no-interaction
+        working-directory: api
+
+      - name: Run pytest
+        run: poetry run pytest -n logical
+        working-directory: api
