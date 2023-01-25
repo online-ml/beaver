@@ -1,6 +1,6 @@
-<h1>🦫 Beaver • MLOps for (online) machine learning</h1>
+<h1>Orac • MLOps for (online) machine learning</h1>
 
-**🚧 The purpose of Beaver is to package [this](https://github.com/MaxHalford/taxi-demo-rp-mz-rv-rd-st) proof-of-concept. Beaver is not yet meant to be used seriously. Feel welcome to use it for inspiration and educative purposes though 🏗**
+**🚧 The purpose of Orac is to make launching and hosting an end-to-end online machine learning pipeline easy. We have a first working sample [here](https://github.com/OracLabs/orac/tree/main/examples/taxis) and more to come. 
 
 <div align="center" >
   <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
@@ -8,7 +8,7 @@
 
 ## 👋 Introduction
 
-Beaver is...
+Orac is...
 
 🍱 [*The whole package*](https://www.youtube.com/watch?v=nzFTmJnIakk&list=PLIU25-FciwNaz5PqWPiHmPCMOFYoEsJ8c&index=5) • it's a framework to develop, deploy, and maintain machine learning models. Including feature engineering.
 
@@ -27,8 +27,8 @@ Beaver is...
 The easiest way is to run the provided [`docker-compose.yaml`](docker-compose.yaml) 🐳
 
 ```sh
-git clone https://github.com/online-ml/beaver
-cd beaver
+git clone git@github.com:OracLabs/orac.git
+cd orac
 docker-compose up
 ```
 
