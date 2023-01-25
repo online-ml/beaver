@@ -3,7 +3,7 @@
 **🚧 The purpose of Orac is to make launching and hosting an end-to-end online machine learning pipeline easy. It is the next generation of 'beaver' and part of the [online machine learning](https://github.com/online-ml) ecosystem. We have a first working sample [here](https://github.com/MaxHalford/taxi-demo-rp-mz-rv-rd-st) and more to come. 
 
 <div align="center" >
-  <img src="https://user-images.githubusercontent.com/20501546/214674401-5bfdf146-5720-4dbe-97ea-ba48dde3e27c.jpeg" width="25%" align="right" />
+  <img src="https://user-images.githubusercontent.com/18452001/214675829-7ef3f6f4-a1dc-41a2-9ce2-7b8cca3eb6df.png" width="40%" align="right" />
 </div>
 
 ## 👋 Introduction
