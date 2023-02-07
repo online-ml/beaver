@@ -26,6 +26,7 @@ celery = {extras = ["redis"], version = "^5.2.7"}
 river = "^0.13.0"
 websockets = "^10.4"
 
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
