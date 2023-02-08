@@ -24,7 +24,7 @@ jobs:
         run: poetry add pre-commit
         working-directory: api
       - name: Run pre-commit
-        run: poetry run pre-commit run
+        run: poetry run pre-commit run --all-files
         working-directory: api
 
   test:

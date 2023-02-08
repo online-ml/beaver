@@ -10,7 +10,6 @@ import kafka
 import sqlmodel as sqlm
 from fastapi.encoders import jsonable_encoder
 
-
 from api import (  # isort:skip
     db,
     feature_sets,

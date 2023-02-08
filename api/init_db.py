@@ -1,19 +1,22 @@
 import json
+
 import dill
 import kafka
 import sqlmodel as sqlm
 from river import datasets, linear_model, preprocessing
-from api import db
-from api import experiments
-from api import feature_sets
-from api import models
-from api import processors
-from api import runners
-from api import sinks
-from api import sources
-from api import tasks
-from api import targets
 
+from api import (  # isort:skip
+    db,
+    experiments,
+    feature_sets,
+    models,
+    processors,
+    runners,
+    sinks,
+    sources,
+    targets,
+    tasks,
+)
 
 if __name__ == "__main__":
 

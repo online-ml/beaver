@@ -2,15 +2,18 @@ import fastapi
 from starlette.middleware.cors import CORSMiddleware
 
 from .settings import settings
-from api import db
-from api import experiments
-from api import feature_sets
-from api import models
-from api import processors
-from api import runners
-from api import sinks
-from api import sources
-from api import targets
+
+from api import (  # isort:skip
+    experiments,
+    feature_sets,
+    models,
+    processors,
+    runners,
+    sinks,
+    sources,
+    targets,
+)
+
 
 app = fastapi.FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_PREFIX}/openapi.json"
