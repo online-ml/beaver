@@ -23,8 +23,12 @@ dill = "^0.3.6"
 psycopg = {extras = ["binary"], version = "^3.1.4"}
 psycopg2 = "^2.9.5"
 celery = {extras = ["redis"], version = "^5.2.7"}
-river = "^0.13.0"
+river = "^0.15.0"
+websockets = "^10.4"
 
+[tool.ruff]
+line-length = 100
+ignore = ["E501"]
 
 [build-system]
 requires = ["poetry-core"]

@@ -4,3 +4,4 @@ psycopg[binary]
 pandas
 requests
 river
+jupyter

@@ -33,6 +33,34 @@ services:
       - 9644:9644
       - 29092:29092
 
+  redpanda-console:
+    image: vectorized/console:latest
+    container_name: redpanda-console
+    entrypoint: /bin/sh
+    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda:29092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://redpanda:8081"]
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda:9644"]
+        connect:
+          enabled: true
+          clusters:
+            - name: local-connect-cluster
+              url: http://connect:8083
+    ports:
+      - 8080:8080
+    depends_on:
+      - redpanda
+
+
   materialize:
     image: materialize/materialized:v0.12.0
     container_name: materialize
@@ -52,7 +80,7 @@ services:
     build: api
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
-    command: celery -A api.experiments worker
+    command: celery -A api.experiments worker -c 6  # specify max number of tasks. temp solution to how many experiments can be run at the same time
     depends_on:
       - redis
       - postgres
@@ -90,6 +118,31 @@ services:
       - 3000:3000
     depends_on:
       - api
+
+  telegraf:
+    image: telegraf
+    container_name: telegraf
+    restart: always
+    volumes:
+      - ./dashboard/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    ports:
+      - 8125:8125
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=
+    ports:
+      - 4000:3000
+    volumes:
+      - ./dashboard/grafana_volume:/var/lib/grafana
+    depends_on:
+      - postgres
+
 
 volumes:
   postgres:

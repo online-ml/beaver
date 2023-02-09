@@ -1,6 +1,7 @@
 import base64
 import datetime as dt
 import json
+import uuid
 
 import celery
 import dill
@@ -23,6 +24,31 @@ from api import (  # isort:skip
 router = fastapi.APIRouter()
 
 RUNNER = celery.Celery("experiments", broker="redis://redis:6379/0")
+
+
+@RUNNER.task
+def send_metrics(experiment_id):
+    with db.session() as session:
+        experiment = session.get(Experiment, experiment_id)
+        sink = experiment.sink
+        feature_set = experiment.feature_set
+        processor = feature_set.processor
+
+    producer = kafka.KafkaProducer(
+        bootstrap_servers=[sink.url],
+        key_serializer=str.encode,
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    )
+
+    for metric in processor.stream(f"performance_{experiment_id}"):
+        producer.send(
+            topic=f"performance_{experiment_id}",
+            key=str(uuid.uuid4()),
+            value={
+                "experiment_id": experiment_id,
+                "value": metric,
+            },
+        )
 
 
 @RUNNER.task
@@ -149,6 +175,8 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
         run_inference.delay(self.id)
         if hasattr(dill.loads(model.content), "learn"):
             run_training.delay(self.id)
+
+        send_metrics.delay(self.id)
 
         return self
 
