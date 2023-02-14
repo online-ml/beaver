@@ -8,6 +8,7 @@ import dill
 import fastapi
 import kafka
 import sqlmodel as sqlm
+from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from api import (  # isort:skip
@@ -149,9 +150,11 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     runner: runners.Runner = sqlm.Relationship(back_populates="experiments")
     sink_id: int = sqlm.Field(foreign_key="sink.id")
     sink: sinks.Sink = sqlm.Relationship(back_populates="experiments")
+    task_ids: str | None = sqlm.Field(default=None)
 
     def create(self, session):
 
+        t_ids = []
         # target.processor = feature_set.processor
         feature_set = session.get(feature_sets.FeatureSet, self.feature_set_id)
         target = session.get(targets.Target, self.target_id)
@@ -172,11 +175,16 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
 
         self.create_predictions_view()
         self.create_performance_view()
-        run_inference.delay(self.id)
+        t_ids.append(run_inference.delay(self.id).id)
         if hasattr(dill.loads(model.content), "learn"):
-            run_training.delay(self.id)
+            t_ids.append(run_training.delay(self.id).id)
 
-        send_metrics.delay(self.id)
+        t_ids.append(send_metrics.delay(self.id).id)
+        self.task_ids = ",".join(t_ids)
+
+        session.add(self)
+        session.commit()
+        session.refresh(self)
 
         return self
 
@@ -307,6 +315,27 @@ def create_experiment(experiment: Experiment):
         return exp
 
 
+@router.get("/{experiment_id}/stop")
+def stop_experiment(experiment_id: int):
+    with db.session() as session:
+        exp = session.get(Experiment, experiment_id)
+        if not exp:
+            raise HTTPException(status_code=404, detail="Experiment not found")
+        for task_id in exp.task_ids.split(","):
+            RUNNER.control.revoke(task_id, terminate=True)
+
+
+@router.delete("/{experiment_id}")
+def delete_experiment(experiment_id: int):
+    with db.session() as session:
+        exp = session.get(Experiment, experiment_id)
+        if not exp:
+            raise HTTPException(status_code=404, detail="Experiment not found")
+        session.delete(exp)
+        session.commit()
+        return {"ok": True}
+
+
 @router.get("/")
 def read_experiments(offset: int = 0, limit: int = fastapi.Query(default=100, lte=100)):
     with db.session() as session:
@@ -337,6 +366,7 @@ def read_experiment(experiment_id: int):
                 Experiment.model_id,
                 Experiment.runner_id,
                 Experiment.sink_id,
+                Experiment.task_ids,
             ).where(Experiment.id == experiment_id)
         ).first()
         if not experiment:
