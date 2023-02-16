@@ -2,6 +2,7 @@ import base64
 import datetime as dt
 import json
 import uuid
+from typing import List
 
 import celery
 import dill
@@ -10,6 +11,8 @@ import kafka
 import sqlmodel as sqlm
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import Column, String
+from sqlalchemy.dialects import postgresql
 
 from api import (  # isort:skip
     db,
@@ -150,7 +153,9 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     runner: runners.Runner = sqlm.Relationship(back_populates="experiments")
     sink_id: int = sqlm.Field(foreign_key="sink.id")
     sink: sinks.Sink = sqlm.Relationship(back_populates="experiments")
-    task_ids: str | None = sqlm.Field(default=None)
+    task_ids: List[str] | None = sqlm.Field(
+        default=None, sa_column=Column(postgresql.ARRAY(String()))
+    )
 
     def create(self, session):
 
@@ -175,12 +180,13 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
 
         self.create_predictions_view()
         self.create_performance_view()
+
         t_ids.append(run_inference.delay(self.id).id)
         if hasattr(dill.loads(model.content), "learn"):
             t_ids.append(run_training.delay(self.id).id)
 
         t_ids.append(send_metrics.delay(self.id).id)
-        self.task_ids = ",".join(t_ids)
+        self.task_ids = t_ids
 
         session.add(self)
         session.commit()
@@ -321,7 +327,7 @@ def stop_experiment(experiment_id: int):
         exp = session.get(Experiment, experiment_id)
         if not exp:
             raise HTTPException(status_code=404, detail="Experiment not found")
-        for task_id in exp.task_ids.split(","):
+        for task_id in exp.task_ids:
             RUNNER.control.revoke(task_id, terminate=True)
 
 
@@ -333,6 +339,8 @@ def delete_experiment(experiment_id: int):
             raise HTTPException(status_code=404, detail="Experiment not found")
         session.delete(exp)
         session.commit()
+        for task_id in exp.task_ids:
+            RUNNER.control.revoke(task_id, terminate=True)
         return {"ok": True}
 
 
