@@ -7,7 +7,7 @@ from api import db
 router = fastapi.APIRouter()
 
 
-class Processor(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
+class StreamProcessor(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     id: int | None = sqlm.Field(default=None, primary_key=True)
     name: str
     protocol: str
