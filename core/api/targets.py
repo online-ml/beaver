@@ -1,7 +1,7 @@
 import fastapi
 import sqlmodel as sqlm
 
-from api import db, processors, tasks
+from api import db, processors, enums
 
 router = fastapi.APIRouter()
 
@@ -12,11 +12,10 @@ class Target(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     query: str
     key_field: str
     target_field: str
-    task: tasks.TaskEnum
+    task: enums.Task
 
     processor_id: int = sqlm.Field(foreign_key="processor.id")
     processor: processors.Processor = sqlm.Relationship(back_populates="targets")
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="target")  # type: ignore[name-defined] # noqa
 
     def create(self, session):
         processor = session.get(processors.Processor, self.processor_id)

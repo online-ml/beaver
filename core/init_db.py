@@ -15,7 +15,7 @@ from api import (  # isort:skip
     sinks,
     sources,
     targets,
-    tasks,
+    enums,
 )
 
 if __name__ == "__main__":

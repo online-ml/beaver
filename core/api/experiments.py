@@ -22,7 +22,8 @@ from api import (  # isort:skip
     runners,
     sinks,
     targets,
-    tasks,
+    enums,
+    projects,
 )
 
 router = fastapi.APIRouter()
@@ -145,21 +146,17 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     feature_set: feature_sets.FeatureSet = sqlm.Relationship(
         back_populates="experiments"
     )
-    target_id: int = sqlm.Field(foreign_key="target.id")
-    target: targets.Target = sqlm.Relationship(back_populates="experiments")
+    project_id: int = sqlm.Field(foreign_key="project.id")
+    project: projects.Project = sqlm.Relationship(back_populates="experiments")
     model_id: int = sqlm.Field(foreign_key="model.id")
     model: models.Model = sqlm.Relationship(back_populates="experiments")
     runner_id: int = sqlm.Field(foreign_key="runner.id")
     runner: runners.Runner = sqlm.Relationship(back_populates="experiments")
-    sink_id: int = sqlm.Field(foreign_key="sink.id")
-    sink: sinks.Sink = sqlm.Relationship(back_populates="experiments")
-    task_ids: List[str] | None = sqlm.Field(
-        default=None, sa_column=Column(postgresql.ARRAY(String()))
-    )
+    task_ids: str | None = sqlm.Field(default=None)
 
     def create(self, session):
 
-        t_ids = []
+        task_ids = []
         # target.processor = feature_set.processor
         feature_set = session.get(feature_sets.FeatureSet, self.feature_set_id)
         target = session.get(targets.Target, self.target_id)
@@ -181,12 +178,12 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
         self.create_predictions_view()
         self.create_performance_view()
 
-        t_ids.append(run_inference.delay(self.id).id)
+        task_ids.append(run_inference.delay(self.id).id)
         if hasattr(dill.loads(model.content), "learn"):
-            t_ids.append(run_training.delay(self.id).id)
+            task_ids.append(run_training.delay(self.id).id)
 
-        t_ids.append(send_metrics.delay(self.id).id)
-        self.task_ids = t_ids
+        task_ids.append(send_metrics.delay(self.id).id)
+        self.task_ids = ", ".join(task_ids)
 
         session.add(self)
         session.commit()
@@ -201,9 +198,9 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
             sink = session.get(sinks.Sink, self.sink_id)
             processor = session.get(processors.Processor, target.processor_id)
 
-        if target.task == tasks.TaskEnum.binary_clf.value:
+        if target.task == enums.Task.binary_clf.value:
             prediction_type = "JSONB"
-        elif target.task == tasks.TaskEnum.regression:
+        elif target.task == enums.Task.regression:
             prediction_type = "FLOAT"
         else:
             raise NotImplementedError
@@ -236,8 +233,8 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     )"""
 
         if (
-            target.task == tasks.TaskEnum.binary_clf.value
-            or target.task == tasks.TaskEnum.regression
+            target.task == enums.Task.binary_clf.value
+            or target.task == enums.Task.regression
         ):
 
             processor.execute(
@@ -256,7 +253,7 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
             target = session.get(targets.Target, self.target_id)
             processor = session.get(processors.Processor, target.processor_id)
 
-        if target.task == tasks.TaskEnum.binary_clf.value:
+        if target.task == enums.Task.binary_clf.value:
 
             processor.execute(
                 f"""
@@ -286,7 +283,7 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     )"""
             )
 
-        elif target.task == tasks.TaskEnum.regression:
+        elif target.task == enums.Task.regression:
             processor.execute(
                 f"""
     CREATE VIEW performance_{self.id} AS (
@@ -327,7 +324,7 @@ def stop_experiment(experiment_id: int):
         exp = session.get(Experiment, experiment_id)
         if not exp:
             raise HTTPException(status_code=404, detail="Experiment not found")
-        for task_id in exp.task_ids:
+        for task_id in exp.task_ids.split(", "):
             RUNNER.control.revoke(task_id, terminate=True)
 
 
@@ -339,7 +336,7 @@ def delete_experiment(experiment_id: int):
             raise HTTPException(status_code=404, detail="Experiment not found")
         session.delete(exp)
         session.commit()
-        for task_id in exp.task_ids:
+        for task_id in exp.task_ids.split(", "):
             RUNNER.control.revoke(task_id, terminate=True)
         return {"ok": True}
 

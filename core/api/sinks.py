@@ -12,8 +12,6 @@ class Sink(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     protocol: str
     url: str
 
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="sink")  # type: ignore[name-defined] # noqa
-
 
 @router.post("/")
 def create_sink(sink: Sink):

@@ -26,9 +26,22 @@ celery = {extras = ["redis"], version = "^5.2.7"}
 river = "^0.15.0"
 websockets = "^10.4"
 
+[tool.poetry.group.dev.dependencies]
+httpx = "^0.23.3"
+
 [tool.ruff]
 line-length = 100
 ignore = ["E501"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--doctest-modules",
+    "--doctest-glob=README.md",
+    "--verbose",
+    "-ra",
+    "--color=yes",
+]
+doctest_optionflags = "NORMALIZE_WHITESPACE NUMBER ELLIPSIS"
 
 [build-system]
 requires = ["poetry-core"]

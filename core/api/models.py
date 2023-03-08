@@ -4,7 +4,7 @@ import dill
 import fastapi
 import sqlmodel as sqlm
 
-from api import db, tasks
+from api import db, enums
 
 router = fastapi.APIRouter()
 
@@ -12,7 +12,7 @@ router = fastapi.APIRouter()
 class Model(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     id: int | None = sqlm.Field(default=None, primary_key=True)
     name: str = sqlm.Field(unique=True)
-    task: tasks.TaskEnum
+    task: enums.Task
     content: bytes
 
     experiments: list["Experiment"] = sqlm.Relationship(back_populates="model")  # type: ignore[name-defined] # noqa
