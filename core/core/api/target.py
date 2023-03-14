@@ -1,7 +1,7 @@
 import fastapi
 import sqlmodel as sqlm
 
-from core import db, infra, models
+from core import db, models
 
 router = fastapi.APIRouter()
 
@@ -36,7 +36,7 @@ def read_target(
     name: str,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
-    target = session.get(Target, name)
+    target = session.get(models.Target, name)
     if not target:
         raise fastapi.HTTPException(status_code=404, detail="Target not found")
     return target

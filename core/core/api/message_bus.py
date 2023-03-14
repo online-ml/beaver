@@ -18,7 +18,7 @@ def create_message_bus(
 
 
 @router.get("/", response_model=list[models.MessageBus])
-def read_message_bus(
+def get_message_buses(
     offset: int = 0,
     limit: int = fastapi.Query(default=100, lte=100),
     session: sqlm.Session = fastapi.Depends(db.get_session),

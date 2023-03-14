@@ -1,7 +1,7 @@
 import fastapi
 import sqlmodel as sqlm
 
-from core import db, infra, models
+from core import db, models
 
 router = fastapi.APIRouter()
 
@@ -36,7 +36,7 @@ def read_project(
     name: str,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
-    project = session.get(Project, name)
+    project = session.get(models.Project, name)
     if not project:
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
     return project
