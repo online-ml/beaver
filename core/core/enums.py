@@ -9,12 +9,13 @@ class Task(str, enum.Enum):
 class MessageBus(str, enum.Enum):
     kafka = "KAFKA"
     redpanda = "REDPANDA"
-    dummy = "DUMMY"
+    sqlite = "SQLITE"
 
 
 class StreamProcessor(str, enum.Enum):
-    kafka = "MATERIALIZE"
-    dummy = "DUMMY"
+    materialize = "MATERIALIZE"
+    ksql = "KSQL"
+    sqlite = "SQLITE"
 
 
 class TaskRunner(str, enum.Enum):

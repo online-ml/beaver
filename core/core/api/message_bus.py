@@ -1,6 +1,6 @@
 import fastapi
 import sqlmodel as sqlm
-from core import models, db
+from core import infra, models, db
 
 router = fastapi.APIRouter()
 
@@ -27,12 +27,24 @@ def read_message_bus(
     ).all()
 
 
-@router.get("/{message_bus_id}")
+@router.get("/{name}")
 def read_message_bus(
-    message_bus_id: int,
+    name: str,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
-    message_bus = session.get(models.MessageBus, message_bus_id)
+    message_bus = session.get(models.MessageBus, name)
     if not message_bus:
         raise fastapi.HTTPException(status_code=404, detail="Message bus not found")
-    return {**message_bus.dict(), "topics": message_bus.message_bus.topics}
+    return {**message_bus.dict(), "topics": message_bus.message_bus.topic_names}
+
+
+@router.post("/{name}", status_code=201)
+def send_message(
+    name: str,
+    message: infra.Message,
+    session: sqlm.Session = fastapi.Depends(db.get_session),
+):
+    message_bus = session.get(models.MessageBus, name)
+    if not message_bus:
+        raise fastapi.HTTPException(status_code=404, detail="Message bus not found")
+    message_bus.message_bus.send(message)

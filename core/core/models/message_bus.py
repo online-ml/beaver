@@ -5,15 +5,16 @@ from core import infra, enums
 
 
 class MessageBus(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
-    id: int | None = sqlm.Field(default=None, primary_key=True)
-    name: str
+    name: str = sqlm.Field(primary_key=True)
     protocol: enums.MessageBus
-    url: str | None = None
+    url: str
 
     @property
     def message_bus(self):
+        if self.protocol == enums.MessageBus.sqlite:
+            return infra.SQLiteMessageBus(url=self.url)
         if self.protocol == enums.MessageBus.kafka:
             return infra.KafkaMessageBus(url=self.url)
-        if self.protocol == enums.MessageBus.dummy:
-            return infra.DummyMessageBus()
+        if self.protocol == enums.MessageBus.redpanda:
+            return infra.RedpandaMessageBus(url=self.url)
         raise NotImplementedError

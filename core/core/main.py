@@ -6,7 +6,7 @@ import fastapi
 from starlette.middleware.cors import CORSMiddleware
 
 from .settings import settings
-from . import api
+from core import api, db
 
 
 app = fastapi.FastAPI(
