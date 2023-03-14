@@ -11,7 +11,7 @@ class StreamProcessor(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     protocol: enums.StreamProcessor
     url: str
 
-    projects: list["Project"] = sqlm.Relationship(back_populates="stream_processor")
+    projects: list["Project"] = sqlm.Relationship(back_populates="stream_processor")  # type: ignore[name-defined]
 
     @property
     def infra(self):
