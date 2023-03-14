@@ -118,9 +118,20 @@ def test_phishing(create_message_bus, create_stream_processor, client):
     )
     assert response.status_code == 201
 
-    # TODO: create a view wrapped around the query?
-    # TODO: create a feature set (specifying the stream processor)
-    # TODO: create a runner
+    # Create a features set
+    response = client.post(
+        "/api/feature_set",
+        json={
+            "name": "phishing-features-1",
+            "project_name": "phishing-project",
+            "query": "SELECT key, value FROM messages WHERE topic = 'phishing_features'",
+            "key_field": "key",
+        },
+    )
+    assert response.status_code == 201
+
+    # TODO: run the above in a notebook to continue testing
+    # TODO: create a runner before creating the project, feed it to the project
     # TODO: create an experiment (includes the model, simpler like that)
     # TODO: create a second experiment
     # TODO: monitor, thanks to the project's message bus for sending predictions and stream processor for measuring performance

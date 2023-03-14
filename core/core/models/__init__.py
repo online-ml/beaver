@@ -1,5 +1,6 @@
 # from .experiment import Experiment
-# from .feature_set import FeatureSet
+from .feature_set import FeatureSet
+
 # from .model import Model
 from .project import Project
 from .stream_processor import StreamProcessor

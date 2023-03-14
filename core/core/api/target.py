@@ -13,6 +13,8 @@ def create_target(
     project = session.get(models.Project, target.project_name)
     if not project:
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
+
+    # Check if the query is valid
     project.stream_processor.infra.run_query(target.query)
 
     session.add(target)

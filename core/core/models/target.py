@@ -14,5 +14,5 @@ class Target(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
 
     project_name: str
     project: "Project" = sqlm.Relationship(  # type: ignore[name-defined]
-        sa_relationship_kwargs={"uselist": False}, back_populates="target"
+        sa_relationship_kwargs={"uselist": False}
     )
