@@ -28,7 +28,9 @@ def create_feature_set(
 
 @router.get("/")
 def read_feature_sets(
-    offset: int = 0, limit: int = fastapi.Query(default=100, lte=100)
+    offset: int = 0,
+    limit: int = fastapi.Query(default=100, lte=100),
+    session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
     return session.exec(
         sqlm.select(models.FeatureSet).offset(offset).limit(limit)
@@ -36,8 +38,10 @@ def read_feature_sets(
 
 
 @router.get("/{name}")  # type: ignore[no-redef]
-def read_feature_set(name: str):  # noqa
-    feature_set = session.get(FeatureSet, name)
+def read_feature_set(
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
+):  # noqa
+    feature_set = session.get(models.FeatureSet, name)
     if not feature_set:
         raise fastapi.HTTPException(status_code=404, detail="FeatureSet not found")
     return feature_set
