@@ -5,7 +5,7 @@ from core import infra, models, db
 router = fastapi.APIRouter()
 
 
-@router.post("/")
+@router.post("/", status_code=201)
 def create_message_bus(
     message_bus: models.MessageBus,
     session: sqlm.Session = fastapi.Depends(db.get_session),
@@ -29,13 +29,12 @@ def read_message_bus(
 
 @router.get("/{name}")
 def read_message_bus(
-    name: str,
-    session: sqlm.Session = fastapi.Depends(db.get_session),
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
 ):
     message_bus = session.get(models.MessageBus, name)
     if not message_bus:
         raise fastapi.HTTPException(status_code=404, detail="Message bus not found")
-    return {**message_bus.dict(), "topics": message_bus.message_bus.topic_names}
+    return {**message_bus.dict(), "topics": message_bus.infra.topic_names}
 
 
 @router.post("/{name}", status_code=201)
@@ -47,4 +46,4 @@ def send_message(
     message_bus = session.get(models.MessageBus, name)
     if not message_bus:
         raise fastapi.HTTPException(status_code=404, detail="Message bus not found")
-    message_bus.message_bus.send(message)
+    message_bus.infra.send(message)

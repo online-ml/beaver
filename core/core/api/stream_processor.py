@@ -5,7 +5,7 @@ from core import models, db
 router = fastapi.APIRouter()
 
 
-@router.post("/")
+@router.post("/", status_code=201)
 def create_stream_processor(
     stream_processor: models.StreamProcessor,
     session: sqlm.Session = fastapi.Depends(db.get_session),

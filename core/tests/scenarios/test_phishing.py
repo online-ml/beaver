@@ -47,11 +47,11 @@ def create_message_bus(client: TestClient, sqlite_path: pathlib.Path):
     # Create source
     response = client.post(
         "/api/message_bus",
-        json={"name": "test", "protocol": "SQLITE", "url": str(sqlite_path)},
+        json={"name": "test-mb", "protocol": "SQLITE", "url": str(sqlite_path)},
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert len(client.get("/api/message_bus/").json()) == 1
-    assert client.get("/api/message_bus/test").json()["protocol"] == "SQLITE"
+    assert client.get("/api/message_bus/test-mb").json()["protocol"] == "SQLITE"
 
 
 @pytest.fixture(name="create_stream_processor")
@@ -60,11 +60,11 @@ def create_stream_processor(client: TestClient, sqlite_path: pathlib.Path):
     # Create source
     response = client.post(
         "/api/stream_processor",
-        json={"name": "test", "protocol": "SQLITE", "url": str(sqlite_path)},
+        json={"name": "test-sp", "protocol": "SQLITE", "url": str(sqlite_path)},
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert len(client.get("/api/stream_processor/").json()) == 1
-    assert client.get("/api/stream_processor/test").json()["protocol"] == "SQLITE"
+    assert client.get("/api/stream_processor/test-sp").json()["protocol"] == "SQLITE"
 
 
 def test_phishing(create_message_bus, create_stream_processor, client):
@@ -73,9 +73,9 @@ def test_phishing(create_message_bus, create_stream_processor, client):
     for i, (x, y) in enumerate(datasets.Phishing().take(10)):
         assert (
             client.post(
-                "/api/message_bus/test",
+                "/api/message_bus/test-mb",
                 json={
-                    "topic": "features",
+                    "topic": "phishing_features",
                     "key": f"phishing_{i}",
                     "value": json.dumps(x),
                 },
@@ -84,8 +84,42 @@ def test_phishing(create_message_bus, create_stream_processor, client):
         )
         assert (
             client.post(
-                "/api/message_bus/test",
-                json={"topic": "targets", "key": f"phishing_{i}", "value": str(y)},
+                "/api/message_bus/test-mb",
+                json={
+                    "topic": "phishing_targets",
+                    "key": f"phishing_{i}",
+                    "value": str(y),
+                },
             ).status_code
             == 201
         )
+
+    # Create a project
+    response = client.post(
+        "/api/project",
+        json={
+            "name": "phishing-project",
+            "task": "BINARY_CLASSIFICATION",
+            "stream_processor_name": "test-sp",
+            "sink_message_bus_name": "test-mb",
+        },
+    )
+    assert response.status_code == 201
+
+    # Create a target
+    response = client.post(
+        "/api/target",
+        json={
+            "project_name": "phishing-project",
+            "query": "SELECT key, value FROM messages WHERE topic = 'phishing_targets'",
+            "key_field": "key",
+            "target_field": "value",
+        },
+    )
+    assert response.status_code == 201
+
+    # TODO: create a view wrapped around the query?
+    # TODO: create a feature set (specifying the stream processor)
+    # TODO: create an experiment (includes the model, simpler like that)
+    # TODO: create a second experiment
+    # TODO: monitor, thanks to the project's message bus for sending predictions and stream processor for measuring performance
