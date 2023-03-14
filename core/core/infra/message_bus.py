@@ -1,5 +1,6 @@
 import collections
 import contextlib
+import json
 import typing
 import kafka
 import sqlite3
