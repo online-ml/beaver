@@ -1,6 +1,7 @@
 import fastapi
 import sqlmodel as sqlm
-from core import models, db
+
+from core import db, models
 
 router = fastapi.APIRouter()
 

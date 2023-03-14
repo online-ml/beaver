@@ -1,8 +1,6 @@
 import fastapi
-from . import message_bus
-from . import project
-from . import stream_processor
-from . import target
+
+from . import message_bus, project, stream_processor, target
 
 router = fastapi.APIRouter()
 router.include_router(message_bus.router, prefix="/message_bus", tags=["message_bus"])
