@@ -120,6 +120,7 @@ def test_phishing(create_message_bus, create_stream_processor, client):
 
     # TODO: create a view wrapped around the query?
     # TODO: create a feature set (specifying the stream processor)
+    # TODO: create a runner
     # TODO: create an experiment (includes the model, simpler like that)
     # TODO: create a second experiment
     # TODO: monitor, thanks to the project's message bus for sending predictions and stream processor for measuring performance

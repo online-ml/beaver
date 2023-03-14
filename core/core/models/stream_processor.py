@@ -1,7 +1,7 @@
 import fastapi
 import sqlmodel as sqlm
 
-from core import infra, enums
+from core import infra as _infra, enums
 
 
 class StreamProcessor(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
@@ -16,5 +16,5 @@ class StreamProcessor(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     @property
     def infra(self):
         if self.protocol == enums.StreamProcessor.sqlite:
-            return infra.SQLiteStreamProcessor(url=self.url)
+            return _infra.SQLiteStreamProcessor(url=self.url)
         raise NotImplementedError

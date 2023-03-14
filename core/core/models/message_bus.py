@@ -1,7 +1,7 @@
 import fastapi
 import sqlmodel as sqlm
 
-from core import infra, enums
+from core import _infra, enums
 
 
 class MessageBus(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
@@ -16,9 +16,9 @@ class MessageBus(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     @property
     def infra(self):
         if self.protocol == enums.MessageBus.sqlite:
-            return infra.SQLiteMessageBus(url=self.url)
+            return _infra.SQLiteMessageBus(url=self.url)
         if self.protocol == enums.MessageBus.kafka:
-            return infra.KafkaMessageBus(url=self.url)
+            return _infra.KafkaMessageBus(url=self.url)
         if self.protocol == enums.MessageBus.redpanda:
-            return infra.RedpandaMessageBus(url=self.url)
+            return _infra.RedpandaMessageBus(url=self.url)
         raise NotImplementedError
