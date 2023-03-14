@@ -4,7 +4,6 @@ import typing
 
 
 class StreamProcessor(typing.Protocol):
-    @property
     def run_query(self, query: str):
         ...
 

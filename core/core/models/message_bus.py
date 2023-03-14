@@ -1,7 +1,7 @@
 import fastapi
 import sqlmodel as sqlm
 
-from core import _infra, enums
+from core import infra as _infra, enums
 
 
 class MessageBus(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
@@ -10,8 +10,6 @@ class MessageBus(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     name: str = sqlm.Field(primary_key=True)
     protocol: enums.MessageBus
     url: str
-
-    projects: list["Project"] = sqlm.Relationship(back_populates="sink_message_bus")  # type: ignore[name-defined]
 
     @property
     def infra(self):
