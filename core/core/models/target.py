@@ -10,6 +10,7 @@ class Target(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     id: int | None = sqlm.Field(default=None, primary_key=True)
     query: str
     key_field: str
+    ts_field: str
     target_field: str
 
     project_name: str

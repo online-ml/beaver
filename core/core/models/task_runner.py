@@ -1,41 +1,22 @@
 import fastapi
 import sqlmodel as sqlm
 
-from api import db
-
-router = fastapi.APIRouter()
+from core import infra as _infra, enums
 
 
-class Runner(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
+class TaskRunner(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     __tablename__ = "task_runner"
 
-    id: int | None = sqlm.Field(default=None, primary_key=True)
-    name: str
-    protocol: str
-    url: str
+    name: str = sqlm.Field(primary_key=True)
+    protocol: enums.TaskRunner
+    url: str | None = sqlm.Field(default=None)
 
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="runner")  # type: ignore[name-defined] # noqa
+    projects: list["Project"] = sqlm.Relationship(back_populates="task_runner")  # type: ignore[name-defined]
 
+    @property
+    def infra(self):
+        if self.protocol == enums.TaskRunner.fastapi_background_tasks:
+            from core.main import app
 
-@router.post("/")
-def create_runner(runner: Runner):
-    with db.session() as session:
-        session.add(runner)
-        session.commit()
-        session.refresh(runner)
-        return runner
-
-
-@router.get("/", response_model=list[Runner])
-def read_runners(offset: int = 0, limit: int = fastapi.Query(default=100, lte=100)):
-    with db.session() as session:
-        return session.exec(sqlm.select(Runner).offset(offset).limit(limit)).all()
-
-
-@router.get("/{runner_id}")
-def read_runner(runner_id: int):
-    with db.session() as session:
-        runner = session.get(Runner, runner_id)
-        if not runner:
-            raise fastapi.HTTPException(status_code=404, detail="Runner not found")
-        return runner
+            return _infra.FastAPIBackgroundTasksRunner(app)
+        raise NotImplementedError

@@ -1,12 +1,13 @@
 import fastapi
 
-from . import feature_set, message_bus, project, stream_processor, target
+from . import feature_set, message_bus, project, stream_processor, target, task_runner
 
 router = fastapi.APIRouter()
-router.include_router(feature_set.router, prefix="/feature_set", tags=["feature_set"])
-router.include_router(message_bus.router, prefix="/message_bus", tags=["message_bus"])
+router.include_router(feature_set.router, prefix="/feature-set", tags=["feature-set"])
+router.include_router(message_bus.router, prefix="/message-bus", tags=["message-bus"])
 router.include_router(project.router, prefix="/project", tags=["project"])
 router.include_router(
-    stream_processor.router, prefix="/stream_processor", tags=["stream_processor"]
+    stream_processor.router, prefix="/stream-processor", tags=["stream-processor"]
 )
 router.include_router(target.router, prefix="/target", tags=["target"])
+router.include_router(task_runner.router, prefix="/task-runner", tags=["task-runner"])

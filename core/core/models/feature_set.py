@@ -8,5 +8,6 @@ class FeatureSet(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     name: str = sqlm.Field(primary_key=True)
     query: str
     key_field: str
+    ts_field: str
 
     project_name: str

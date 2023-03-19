@@ -46,12 +46,12 @@ def create_message_bus(client: TestClient, sqlite_path: pathlib.Path):
 
     # Create source
     response = client.post(
-        "/api/message_bus",
-        json={"name": "test-mb", "protocol": "SQLITE", "url": str(sqlite_path)},
+        "/api/message-bus",
+        json={"name": "test_mb", "protocol": "SQLITE", "url": str(sqlite_path)},
     )
     assert response.status_code == 201
-    assert len(client.get("/api/message_bus/").json()) == 1
-    assert client.get("/api/message_bus/test-mb").json()["protocol"] == "SQLITE"
+    assert len(client.get("/api/message-bus/").json()) == 1
+    assert client.get("/api/message-bus/test_mb").json()["protocol"] == "SQLITE"
 
 
 @pytest.fixture(name="create_stream_processor")
@@ -59,21 +59,39 @@ def create_stream_processor(client: TestClient, sqlite_path: pathlib.Path):
 
     # Create source
     response = client.post(
-        "/api/stream_processor",
-        json={"name": "test-sp", "protocol": "SQLITE", "url": str(sqlite_path)},
+        "/api/stream-processor",
+        json={"name": "test_sp", "protocol": "SQLITE", "url": str(sqlite_path)},
     )
     assert response.status_code == 201
-    assert len(client.get("/api/stream_processor/").json()) == 1
-    assert client.get("/api/stream_processor/test-sp").json()["protocol"] == "SQLITE"
+    assert len(client.get("/api/stream-processor/").json()) == 1
+    assert client.get("/api/stream-processor/test_sp").json()["protocol"] == "SQLITE"
 
 
-def test_phishing(create_message_bus, create_stream_processor, client):
+@pytest.fixture(name="create_task_runner")
+def create_task_runner(client: TestClient, sqlite_path: pathlib.Path):
+
+    # Create source
+    response = client.post(
+        "/api/task-runner",
+        json={"name": "test_tr", "protocol": "FASTAPI_BACKGROUND_TASKS"},
+    )
+    assert response.status_code == 201
+    assert len(client.get("/api/task-runner/").json()) == 1
+    assert (
+        client.get("/api/task-runner/test_tr").json()["protocol"]
+        == "FASTAPI_BACKGROUND_TASKS"
+    )
+
+
+def test_phishing(
+    create_message_bus, create_stream_processor, create_task_runner, client
+):
 
     # Send data, inteleaving features and targets
     for i, (x, y) in enumerate(datasets.Phishing().take(10)):
         assert (
             client.post(
-                "/api/message_bus/test-mb",
+                "/api/message-bus/test_mb",
                 json={
                     "topic": "phishing_features",
                     "key": f"phishing_{i}",
@@ -84,7 +102,7 @@ def test_phishing(create_message_bus, create_stream_processor, client):
         )
         assert (
             client.post(
-                "/api/message_bus/test-mb",
+                "/api/message-bus/test_mb",
                 json={
                     "topic": "phishing_targets",
                     "key": f"phishing_{i}",
@@ -98,10 +116,11 @@ def test_phishing(create_message_bus, create_stream_processor, client):
     response = client.post(
         "/api/project",
         json={
-            "name": "phishing-project",
+            "name": "phishing_project",
             "task": "BINARY_CLASSIFICATION",
-            "stream_processor_name": "test-sp",
-            "sink_message_bus_name": "test-mb",
+            "task_runner_name": "test_tr",
+            "stream_processor_name": "test_sp",
+            "sink_message_bus_name": "test_mb",
         },
     )
     assert response.status_code == 201
@@ -110,28 +129,30 @@ def test_phishing(create_message_bus, create_stream_processor, client):
     response = client.post(
         "/api/target",
         json={
-            "project_name": "phishing-project",
+            "project_name": "phishing_project",
             "query": "SELECT key, value FROM messages WHERE topic = 'phishing_targets'",
             "key_field": "key",
+            "ts_field": "created_at",
             "target_field": "value",
         },
     )
     assert response.status_code == 201
 
-    # Create a features set
+    # Create a feature set
     response = client.post(
-        "/api/feature_set",
+        "/api/feature-set",
         json={
-            "name": "phishing-features-1",
-            "project_name": "phishing-project",
+            "name": "phishing_features_1",
+            "project_name": "phishing_project",
             "query": "SELECT key, value FROM messages WHERE topic = 'phishing_features'",
             "key_field": "key",
+            "ts_field": "created_at",
         },
     )
     assert response.status_code == 201
 
     # TODO: run the above in a notebook to continue testing
-    # TODO: create a runner before creating the project, feed it to the project
     # TODO: create an experiment (includes the model, simpler like that)
     # TODO: create a second experiment
     # TODO: monitor, thanks to the project's message bus for sending predictions and stream processor for measuring performance
+    # TODO: make an SDK!

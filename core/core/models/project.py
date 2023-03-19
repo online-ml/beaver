@@ -14,6 +14,9 @@ class Project(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     stream_processor_name: str = sqlm.Field(foreign_key="stream_processor.name")
     stream_processor: "StreamProcessor" = sqlm.Relationship(back_populates="projects")  # type: ignore[name-defined]
 
+    task_runner_name: str = sqlm.Field(foreign_key="task_runner.name")
+    task_runner: "TaskRunner" = sqlm.Relationship(back_populates="projects")  # type: ignore[name-defined]
+
     target_id: int | None = sqlm.Field(default=None, foreign_key="target.id")
     target: Optional["Target"] = sqlm.Relationship(back_populates="project")  # type: ignore[name-defined]
 

@@ -20,4 +20,4 @@ class StreamProcessor(str, enum.Enum):
 
 class TaskRunner(str, enum.Enum):
     kafka = "CELERY"
-    dummy = "DUMMY"
+    fastapi_background_tasks = "FASTAPI_BACKGROUND_TASKS"

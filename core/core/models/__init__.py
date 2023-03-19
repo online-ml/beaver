@@ -6,5 +6,4 @@ from .project import Project
 from .stream_processor import StreamProcessor
 from .message_bus import MessageBus
 from .target import Target
-
-# from .task_runner import TaskRunner
+from .task_runner import TaskRunner

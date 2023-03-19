@@ -1,5 +1,6 @@
 import collections
 import contextlib
+import datetime as dt
 import json
 import typing
 import kafka
@@ -11,6 +12,7 @@ class Message(pydantic.BaseModel):
     topic: str
     key: str
     value: str
+    created_at: dt.datetime = pydantic.Field(default_factory=dt.datetime.utcnow)
 
 
 class MessageBus(typing.Protocol):
@@ -27,7 +29,9 @@ class SQLiteMessageBus:
         self.url = url
         with self.connection() as con:
             cur = con.cursor()
-            cur.execute("CREATE TABLE IF NOT EXISTS messages(topic, key, value)")
+            cur.execute(
+                "CREATE TABLE IF NOT EXISTS messages(topic, key, value, created_at)"
+            )
 
     @contextlib.contextmanager
     def connection(self):
@@ -47,8 +51,13 @@ class SQLiteMessageBus:
         with self.connection() as con:
             cur = con.cursor()
             cur.execute(
-                "INSERT INTO messages (topic, key, value) VALUES (?, ?, ?)",
-                (message.topic, message.key, message.value),
+                "INSERT INTO messages (topic, key, value, created_at) VALUES (?, ?, ?, ?)",
+                (
+                    message.topic,
+                    message.key,
+                    message.value,
+                    message.created_at,
+                ),
             )
 
 

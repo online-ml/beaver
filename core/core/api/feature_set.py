@@ -43,5 +43,5 @@ def read_feature_set(
 ):  # noqa
     feature_set = session.get(models.FeatureSet, name)
     if not feature_set:
-        raise fastapi.HTTPException(status_code=404, detail="FeatureSet not found")
+        raise fastapi.HTTPException(status_code=404, detail="Feature set not found")
     return feature_set
