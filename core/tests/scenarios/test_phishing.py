@@ -1,12 +1,14 @@
+import base64
 import json
 import functools
 import collections
 import pathlib
+import dill
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
-from river import datasets
+from river import datasets, linear_model, preprocessing
 
 from core.main import app
 from core.db import engine, get_session
@@ -151,8 +153,20 @@ def test_phishing(
     )
     assert response.status_code == 201
 
-    # TODO: run the above in a notebook to continue testing
+    # Create an experiment
+    model = preprocessing.StandardScaler() | linear_model.LogisticRegression()
+    response = client.post(
+        "/api/experiment",
+        json={
+            "name": "phishing_experiment_1",
+            "project_name": "phishing_project",
+            "feature_set_name": "phishing_features_1",
+            "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
+        },
+    )
+
     # TODO: create an experiment (includes the model, simpler like that)
+    # TODO: run tasks when experiment is created
     # TODO: create a second experiment
     # TODO: monitor, thanks to the project's message bus for sending predictions and stream processor for measuring performance
     # TODO: make an SDK!

@@ -25,8 +25,6 @@ psycopg2 = "^2.9.5"
 celery = {extras = ["redis"], version = "^5.2.7"}
 river = "^0.15.0"
 websockets = "^10.4"
-
-[tool.poetry.group.dev.dependencies]
 httpx = "^0.23.3"
 
 [tool.ruff]

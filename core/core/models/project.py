@@ -22,3 +22,6 @@ class Project(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
 
     sink_message_bus_name: str = sqlm.Field(foreign_key="message_bus.name")
     sink_message_bus: "MessageBus" = sqlm.Relationship(back_populates="projects")  # type: ignore[name-defined]
+
+    feature_sets: list["FeatureSet"] = sqlm.Relationship(back_populates="project")  # type: ignore[name-defined]
+    experiments: list["Experiment"] = sqlm.Relationship(back_populates="project")  # type: ignore[name-defined]

@@ -134,7 +134,7 @@ zstd = ["zstandard"]
 name = "certifi"
 version = "2022.12.7"
 description = "Python package for providing Mozilla's CA Bundle."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -298,7 +298,7 @@ python-versions = ">=3.7"
 name = "httpcore"
 version = "0.16.3"
 description = "A minimal low-level HTTP client."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -316,7 +316,7 @@ socks = ["socksio (>=1.0.0,<2.0.0)"]
 name = "httpx"
 version = "0.23.3"
 description = "The next generation HTTP client."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -664,7 +664,7 @@ ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"
 name = "rfc3986"
 version = "1.5.0"
 description = "Validating URI References per RFC 3986"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -894,7 +894,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "b97eb13434c0d5c7550846885e4664fa40baf66373b5e2b8e432498496cd7cff"
+content-hash = "9bced7918dd6890c1aa190397ea509837ceaacb3ec6881d1673a02260c3229f4"
 
 [metadata.files]
 amqp = [
