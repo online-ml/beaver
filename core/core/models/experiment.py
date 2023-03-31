@@ -18,4 +18,4 @@ class Experiment(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
     )
 
     feature_set_name: str = sqlm.Field(foreign_key="feature_set.name")
-    feature_set: "FeatureSet" = sqlm.Relationship(back_populates="experiments")
+    feature_set: "FeatureSet" = sqlm.Relationship(back_populates="experiments")  # type: ignore[name-defined]
