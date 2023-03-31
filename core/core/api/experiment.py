@@ -1,8 +1,9 @@
 import base64
 import functools
+
+import dill
 import fastapi
 import sqlmodel as sqlm
-import dill
 
 from core import db, logic, models
 

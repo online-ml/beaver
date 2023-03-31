@@ -1,14 +1,7 @@
 import fastapi
 
-from . import (
-    experiment,
-    feature_set,
-    message_bus,
-    project,
-    stream_processor,
-    target,
-    task_runner,
-)
+from . import (experiment, feature_set, message_bus, project, stream_processor,
+               target, task_runner)
 
 router = fastapi.APIRouter()
 router.include_router(feature_set.router, prefix="/feature-set", tags=["feature-set"])
