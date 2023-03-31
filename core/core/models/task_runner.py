@@ -15,8 +15,6 @@ class TaskRunner(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
 
     @property
     def infra(self):
-        if self.protocol == enums.TaskRunner.fastapi_background_tasks:
-            from core.main import app
-
-            return _infra.FastAPIBackgroundTasksRunner(app)
+        if self.protocol == enums.TaskRunner.synchronous:
+            return _infra.SynchronousTaskRunner()
         raise NotImplementedError

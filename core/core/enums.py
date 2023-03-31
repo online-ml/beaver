@@ -10,14 +10,19 @@ class MessageBus(str, enum.Enum):
     kafka = "KAFKA"
     redpanda = "REDPANDA"
     sqlite = "SQLITE"
+    pulsar = "PULSAR"
 
 
 class StreamProcessor(str, enum.Enum):
     materialize = "MATERIALIZE"
     ksql = "KSQL"
     sqlite = "SQLITE"
+    bytewax = "BYTEWAX"
+    rising_wave = "RISING_WAVE"
+    pinot = "PINOT"
+    druid = "DRUID"
 
 
 class TaskRunner(str, enum.Enum):
     kafka = "CELERY"
-    fastapi_background_tasks = "FASTAPI_BACKGROUND_TASKS"
+    synchronous = "SYNCHRONOUS"

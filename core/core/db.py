@@ -1,3 +1,4 @@
+import contextlib
 import os
 import sqlmodel as sqlm
 
@@ -15,3 +16,18 @@ def create_db_and_tables():
 def get_session():
     with sqlm.Session(engine) as session:
         yield session
+
+
+@contextlib.contextmanager
+def session():
+    # HACK
+    from core.main import app
+
+    try:
+        session = next(app.dependency_overrides[get_session]())
+        yield session
+    except KeyError:
+        session = next(db.get_session())
+        yield session
+    finally:
+        session.close()

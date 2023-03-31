@@ -74,14 +74,5 @@ class KafkaMessageBus(kafka.KafkaProducer):
         return list(self.list_topics().keys())
 
 
-class RedpandaMessageBus(kafka.KafkaProducer):
-    def __init__(self, url: str):
-        super().__init__(
-            bootstrap_servers=[url],
-            key_serializer=str.encode,
-            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-        )
-
-    @property
-    def topic_names(self) -> typing.List[str]:
-        return list(self.list_topics().keys())
+class RedpandaMessageBus(KafkaMessageBus):
+    ...

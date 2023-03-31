@@ -7,9 +7,6 @@ class TaskRunner(typing.Protocol):
         ...
 
 
-class FastAPIBackgroundTasksRunner:
-    def __init__(self, app: fastapi.FastAPI):
-        self.app = app
-
+class SynchronousTaskRunner:
     def run(self, task):
-        self.app.background_tasks.add_task(task)
+        task()

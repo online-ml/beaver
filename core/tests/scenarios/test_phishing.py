@@ -28,7 +28,7 @@ def session_fixture():
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
     def get_session_override():
-        return session
+        yield session
 
     app.dependency_overrides[get_session] = get_session_override
     client = TestClient(app)
@@ -75,14 +75,11 @@ def create_task_runner(client: TestClient, sqlite_path: pathlib.Path):
     # Create source
     response = client.post(
         "/api/task-runner",
-        json={"name": "test_tr", "protocol": "FASTAPI_BACKGROUND_TASKS"},
+        json={"name": "test_tr", "protocol": "SYNCHRONOUS"},
     )
     assert response.status_code == 201
     assert len(client.get("/api/task-runner/").json()) == 1
-    assert (
-        client.get("/api/task-runner/test_tr").json()["protocol"]
-        == "FASTAPI_BACKGROUND_TASKS"
-    )
+    assert client.get("/api/task-runner/test_tr").json()["protocol"] == "SYNCHRONOUS"
 
 
 def test_phishing(
@@ -164,6 +161,8 @@ def test_phishing(
             "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
         },
     )
+    print(response.json())
+    assert response.status_code == 201
 
     # TODO: create an experiment (includes the model, simpler like that)
     # TODO: run tasks when experiment is created
