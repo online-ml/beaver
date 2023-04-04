@@ -1,10 +1,14 @@
 import contextlib
+import datetime as dt
 import sqlite3
 import typing
 
 
 class StreamProcessor(typing.Protocol):
-    def run_query(self, query: str):
+    def create_view(self, name: str, query: str):
+        ...
+
+    def stream_view(self, name: str, query: str) -> typing.Generator[dict, None, None]:
         ...
 
 
@@ -12,18 +16,15 @@ class SQLiteStreamProcessor:
     def __init__(self, url: str):
         self.url = url
 
-    @contextlib.contextmanager
-    def connection(self):
-        con = sqlite3.connect(self.url)
-        try:
-            yield con
-        finally:
-            con.close()
+    def create_view(self, name, query):
+        with sqlite3.connect(self.url) as con:
+            con.execute(f"CREATE VIEW {name} AS {query}")
 
-    def run_query(self, query: str):
-        with self.connection() as con:
-            cur = con.cursor()
-            return cur.execute(query).fetchall()
+    def stream_view(self, name, since):
+        with sqlite3.connect(self.url) as con:
+            con.row_factory = sqlite3.Row
+            rows = list(map(dict, con.execute(f"SELECT * FROM {name}")))
+        yield from rows
 
 
 class MaterializeStreamProcessor:

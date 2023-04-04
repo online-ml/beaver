@@ -27,6 +27,9 @@ river = "^0.15.0"
 websockets = "^10.4"
 httpx = "^0.23.3"
 
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.22.0"
+
 [tool.ruff]
 line-length = 100
 ignore = ["E501"]

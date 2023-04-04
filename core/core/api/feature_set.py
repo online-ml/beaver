@@ -17,7 +17,9 @@ def create_feature_set(
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
 
     # Check if the query is valid
-    project.stream_processor.infra.run_query(feature_set.query)
+    project.stream_processor.infra.create_view(
+        name=feature_set.name, query=feature_set.query
+    )
 
     session.add(feature_set)
     session.commit()

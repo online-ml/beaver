@@ -1,15 +1,28 @@
+import json
 import fastapi
 import sqlmodel as sqlm
-from core import db, models
+from core import db, models, infra
 
 
 def do_inference(experiment_name):
 
     with db.session() as session:
         experiment = session.get(models.Experiment, experiment_name)
+        project = experiment.project
+        message_bus = project.message_bus
+        model = experiment.get_model()
         feature_set = experiment.feature_set
+        feature_set.project.stream_processor
 
-    raise ValueError()
+    for r in feature_set.stream(experiment.last_ts_seen):
+        y_pred = model.predict(r["features"])
+        message_bus.infra.send(
+            infra.Message(
+                topic=f"{project.name}_{experiment.name}_predictions",
+                key=r["key"],
+                value=json.dumps(y_pred),
+            )
+        )
 
     # processor.execute(
     #     f"""

@@ -27,30 +27,20 @@ class MessageBus(typing.Protocol):
 class SQLiteMessageBus:
     def __init__(self, url: str):
         self.url = url
-        with self.connection() as con:
-            cur = con.cursor()
-            cur.execute(
+        with sqlite3.connect(self.url) as con:
+            con.execute(
                 "CREATE TABLE IF NOT EXISTS messages(topic, key, value, created_at)"
             )
 
-    @contextlib.contextmanager
-    def connection(self):
-        con = sqlite3.connect(self.url)
-        try:
-            yield con
-        finally:
-            con.close()
-
     @property
     def topic_names(self) -> typing.List[str]:
-        with self.connection() as con:
-            cur = con.cursor()
-            return cur.execute("SELECT DISTINCT topic FROM messages").fetchall()
+        with sqlite3.connect(self.url) as con:
+            rows = con.execute("SELECT DISTINCT topic FROM messages").fetchall()
+        return rows
 
     def send(self, message: Message) -> None:
-        with self.connection() as con:
-            cur = con.cursor()
-            cur.execute(
+        with sqlite3.connect(self.url) as con:
+            con.execute(
                 "INSERT INTO messages (topic, key, value, created_at) VALUES (?, ?, ?, ?)",
                 (
                     message.topic,

@@ -15,7 +15,9 @@ def create_target(
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
 
     # Check if the query is valid
-    project.stream_processor.infra.run_query(target.query)
+    project.stream_processor.infra.create_view(
+        name=f"{project.name}_target", query=target.query
+    )
 
     session.add(target)
     session.commit()

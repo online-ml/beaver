@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
-from river import datasets, linear_model, preprocessing
+from river import datasets, linear_model, preprocessing, forest
 
 from core.main import app
 from core.db import engine, get_session
@@ -18,7 +18,9 @@ from core.db import engine, get_session
 def session_fixture():
 
     engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
@@ -36,20 +38,20 @@ def client_fixture(session: Session):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(name="sqlite_path")
-def sqlite_path():
+@pytest.fixture(name="sqlite_mb_path")
+def sqlite_mb_path():
     here = pathlib.Path(__file__).parent
-    yield here / "test.db"
-    (here / "test.db").unlink(missing_ok=True)
+    yield here / "message_bus.db"
+    (here / "message_bus.db").unlink(missing_ok=True)
 
 
 @pytest.fixture(name="create_message_bus")
-def create_message_bus(client: TestClient, sqlite_path: pathlib.Path):
+def create_message_bus(client: TestClient, sqlite_mb_path: pathlib.Path):
 
     # Create source
     response = client.post(
         "/api/message-bus",
-        json={"name": "test_mb", "protocol": "SQLITE", "url": str(sqlite_path)},
+        json={"name": "test_mb", "protocol": "SQLITE", "url": str(sqlite_mb_path)},
     )
     assert response.status_code == 201
     assert len(client.get("/api/message-bus/").json()) == 1
@@ -57,12 +59,12 @@ def create_message_bus(client: TestClient, sqlite_path: pathlib.Path):
 
 
 @pytest.fixture(name="create_stream_processor")
-def create_stream_processor(client: TestClient, sqlite_path: pathlib.Path):
+def create_stream_processor(client: TestClient, sqlite_mb_path: pathlib.Path):
 
     # Create source
     response = client.post(
         "/api/stream-processor",
-        json={"name": "test_sp", "protocol": "SQLITE", "url": str(sqlite_path)},
+        json={"name": "test_sp", "protocol": "SQLITE", "url": str(sqlite_mb_path)},
     )
     assert response.status_code == 201
     assert len(client.get("/api/stream-processor/").json()) == 1
@@ -70,7 +72,7 @@ def create_stream_processor(client: TestClient, sqlite_path: pathlib.Path):
 
 
 @pytest.fixture(name="create_task_runner")
-def create_task_runner(client: TestClient, sqlite_path: pathlib.Path):
+def create_task_runner(client: TestClient, sqlite_mb_path: pathlib.Path):
 
     # Create source
     response = client.post(
@@ -86,11 +88,24 @@ def test_phishing(
     create_message_bus, create_stream_processor, create_task_runner, client
 ):
 
-    # Send data, inteleaving features and targets
-    for i, (x, y) in enumerate(datasets.Phishing().take(10)):
+    # Create a project
+    response = client.post(
+        "/api/project",
+        json={
+            "name": "phishing_project",
+            "task": "BINARY_CLASSIFICATION",
+            "message_bus_name": "test_mb",
+            "stream_processor_name": "test_sp",
+            "task_runner_name": "test_tr",
+        },
+    )
+    assert response.status_code == 201
+
+    # Send 10 samples, without revealing answers
+    for i, (x, _) in enumerate(datasets.Phishing().take(10)):
         assert (
             client.post(
-                "/api/message-bus/test_mb",
+                "/api/message-bus/test_mb",  # TODO: derive message bus through project
                 json={
                     "topic": "phishing_features",
                     "key": f"phishing_{i}",
@@ -99,37 +114,13 @@ def test_phishing(
             ).status_code
             == 201
         )
-        assert (
-            client.post(
-                "/api/message-bus/test_mb",
-                json={
-                    "topic": "phishing_targets",
-                    "key": f"phishing_{i}",
-                    "value": str(y),
-                },
-            ).status_code
-            == 201
-        )
-
-    # Create a project
-    response = client.post(
-        "/api/project",
-        json={
-            "name": "phishing_project",
-            "task": "BINARY_CLASSIFICATION",
-            "task_runner_name": "test_tr",
-            "stream_processor_name": "test_sp",
-            "sink_message_bus_name": "test_mb",
-        },
-    )
-    assert response.status_code == 201
 
     # Create a target
     response = client.post(
         "/api/target",
         json={
             "project_name": "phishing_project",
-            "query": "SELECT key, value FROM messages WHERE topic = 'phishing_targets'",
+            "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_targets'",
             "key_field": "key",
             "ts_field": "created_at",
             "target_field": "value",
@@ -143,15 +134,18 @@ def test_phishing(
         json={
             "name": "phishing_features_1",
             "project_name": "phishing_project",
-            "query": "SELECT key, value FROM messages WHERE topic = 'phishing_features'",
+            "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_features'",
             "key_field": "key",
             "ts_field": "created_at",
+            "features_field": "value",
         },
     )
     assert response.status_code == 201
 
     # Create an experiment
     model = preprocessing.StandardScaler() | linear_model.LogisticRegression()
+    model.learn = model.learn_one
+    model.predict = model.predict_one
     response = client.post(
         "/api/experiment",
         json={
@@ -161,11 +155,32 @@ def test_phishing(
             "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
         },
     )
-    print(response.json())
     assert response.status_code == 201
 
-    # TODO: create an experiment (includes the model, simpler like that)
-    # TODO: run tasks when experiment is created
-    # TODO: create a second experiment
-    # TODO: monitor, thanks to the project's message bus for sending predictions and stream processor for measuring performance
+    # Create a second experiment
+    model = forest.AMFClassifier()
+    model.learn = model.learn_one
+    model.predict = model.predict_one
+    response = client.post(
+        "/api/experiment",
+        json={
+            "name": "phishing_experiment_2",
+            "project_name": "phishing_project",
+            "feature_set_name": "phishing_features_1",
+            "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
+        },
+    )
+    assert response.status_code == 201
+
+    # TODO: check predictions were made for both experiments
+    # TODO: send labels
+    # TODO: get performance
+    # TODO: run learning task
+    # TODO: send more unlabelled samples
+    # TODO: send labels
+    # TODO: get performance
+    # TODO: get best model
+    # TODO: compare to doing it here
+
+    # TODO: go through in old_logic.py
     # TODO: make an SDK!
