@@ -172,6 +172,10 @@ def test_phishing(
     )
     assert response.status_code == 201
 
+    # Check predictions were made
+    print(client.get("/api/project/phishing_project").json())
+    raise ValueError
+
     # TODO: check predictions were made for both experiments
     # TODO: send labels
     # TODO: get performance

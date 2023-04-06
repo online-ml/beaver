@@ -20,6 +20,27 @@ class SQLiteStreamProcessor:
         with sqlite3.connect(self.url) as con:
             con.execute(f"CREATE VIEW {name} AS {query}")
 
+    def create_performance_view(self, project_name):
+        self.create_view(
+            name=f"performance_{project_name}",
+            query=f"""
+            SELECT
+                experiment_name,
+                COUNT(*) AS n_predictions
+            FROM predictions
+            WHERE project = '{project_name}'
+            GROUP BY 1
+            """,
+        )
+
+    def get_performance_view(self, project_name):
+        with sqlite3.connect(self.url) as con:
+            con.row_factory = sqlite3.Row
+            rows = list(
+                map(dict, con.execute(f"SELECT * FROM performance_{project_name}"))
+            )
+        return rows
+
     def stream_view(self, name, since):
         with sqlite3.connect(self.url) as con:
             con.row_factory = sqlite3.Row

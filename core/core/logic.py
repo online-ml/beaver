@@ -18,9 +18,15 @@ def do_inference(experiment_name):
         y_pred = model.predict(r["features"])
         message_bus.infra.send(
             infra.Message(
-                topic=f"{project.name}_{experiment.name}_predictions",
+                topic="predictions",
                 key=r["key"],
-                value=json.dumps(y_pred),
+                value=json.dumps(
+                    {
+                        "project": project.name,
+                        "experiment": experiment.name,
+                        "prediction": y_pred,
+                    }
+                ),
             )
         )
 
