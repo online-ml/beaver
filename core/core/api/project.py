@@ -1,7 +1,7 @@
 import fastapi
 import sqlmodel as sqlm
 
-from core import db, models
+from core import db, logic, models
 
 router = fastapi.APIRouter()
 
@@ -20,9 +20,6 @@ def create_project(
     session.commit()
     session.refresh(project)
 
-    # Create performance view for monitoring experiments
-    project.stream_processor.infra.create_performance_view(project_name=project.name)
-
     return project
 
 
@@ -40,10 +37,11 @@ def read_project(
     name: str,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
+    """Return a project's current state."""
     project = session.get(models.Project, name)
-    performance = project.stream_processor.infra.get_performance_view(
-        project_name=project.name
-    )
     if not project:
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
-    return {**project.dict(), "performance": performance}
+    return {
+        **project.dict(),
+        "experiments": logic.monitor_experiments(project_name=project.name),
+    }

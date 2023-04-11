@@ -24,9 +24,8 @@ class Model(typing.Protocol):
 
 class ExperimentOut(pydantic.BaseModel):
     name: str
-    n_samples_trained_on: int
     sync_seconds: str | None
-    last_ts_seen: dt.datetime | None
+    last_sample_ts: dt.datetime | None
     project_name: str
     feature_set_name: str
 
@@ -52,9 +51,20 @@ def create_experiment(
     session.commit()
     session.refresh(experiment)
 
-    # Run inference in the background
-    project.task_runner.infra.run(
-        functools.partial(logic.do_inference, experiment.name)
+    # Run inference and learning jobs
+    project.job_runner.infra.run(
+        functools.partial(logic.do_progressive_learning, experiment.name)
     )
 
     return experiment
+
+
+@router.put("/{name}/unpause")
+def unpause_experiment(
+    name: str,
+    session: sqlm.Session = fastapi.Depends(db.get_session),
+):
+    experiment = session.get(models.Experiment, name)
+    experiment.project.job_runner.infra.run(
+        functools.partial(logic.do_progressive_learning, experiment.name)
+    )

@@ -23,6 +23,6 @@ class StreamProcessor(str, enum.Enum):
     druid = "DRUID"
 
 
-class TaskRunner(str, enum.Enum):
+class JobRunner(str, enum.Enum):
     kafka = "CELERY"
     synchronous = "SYNCHRONOUS"

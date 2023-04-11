@@ -7,7 +7,7 @@ from . import (
     project,
     stream_processor,
     target,
-    task_runner,
+    job_runner,
 )
 
 router = fastapi.APIRouter()
@@ -18,5 +18,5 @@ router.include_router(
     stream_processor.router, prefix="/stream-processor", tags=["stream-processor"]
 )
 router.include_router(target.router, prefix="/target", tags=["target"])
-router.include_router(task_runner.router, prefix="/task-runner", tags=["task-runner"])
+router.include_router(job_runner.router, prefix="/task-runner", tags=["task-runner"])
 router.include_router(experiment.router, prefix="/experiment", tags=["experiment"])

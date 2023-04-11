@@ -16,7 +16,7 @@ def create_target(
 
     # Check if the query is valid
     project.stream_processor.infra.create_view(
-        name=f"{project.name}_target", query=target.query
+        name=project.target_view_name, query=target.query
     )
 
     session.add(target)

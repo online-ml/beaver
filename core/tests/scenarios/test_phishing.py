@@ -71,8 +71,8 @@ def create_stream_processor(client: TestClient, sqlite_mb_path: pathlib.Path):
     assert client.get("/api/stream-processor/test_sp").json()["protocol"] == "SQLITE"
 
 
-@pytest.fixture(name="create_task_runner")
-def create_task_runner(client: TestClient, sqlite_mb_path: pathlib.Path):
+@pytest.fixture(name="create_job_runner")
+def create_job_runner(client: TestClient, sqlite_mb_path: pathlib.Path):
 
     # Create source
     response = client.post(
@@ -85,7 +85,7 @@ def create_task_runner(client: TestClient, sqlite_mb_path: pathlib.Path):
 
 
 def test_phishing(
-    create_message_bus, create_stream_processor, create_task_runner, client
+    create_message_bus, create_stream_processor, create_job_runner, client
 ):
 
     # Create a project
@@ -96,7 +96,7 @@ def test_phishing(
             "task": "BINARY_CLASSIFICATION",
             "message_bus_name": "test_mb",
             "stream_processor_name": "test_sp",
-            "task_runner_name": "test_tr",
+            "job_runner_name": "test_tr",
         },
     )
     assert response.status_code == 201
@@ -107,8 +107,8 @@ def test_phishing(
             client.post(
                 "/api/message-bus/test_mb",  # TODO: derive message bus through project
                 json={
-                    "topic": "phishing_features",
-                    "key": f"phishing_{i}",
+                    "topic": "phishing_project_features",
+                    "key": str(i),
                     "value": json.dumps(x),
                 },
             ).status_code
@@ -132,9 +132,9 @@ def test_phishing(
     response = client.post(
         "/api/feature-set",
         json={
-            "name": "phishing_features_1",
+            "name": "phishing_project_features",
             "project_name": "phishing_project",
-            "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_features'",
+            "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_project_features'",
             "key_field": "key",
             "ts_field": "created_at",
             "features_field": "value",
@@ -151,7 +151,7 @@ def test_phishing(
         json={
             "name": "phishing_experiment_1",
             "project_name": "phishing_project",
-            "feature_set_name": "phishing_features_1",
+            "feature_set_name": "phishing_project_features",
             "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
         },
     )
@@ -166,25 +166,59 @@ def test_phishing(
         json={
             "name": "phishing_experiment_2",
             "project_name": "phishing_project",
-            "feature_set_name": "phishing_features_1",
+            "feature_set_name": "phishing_project_features",
             "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
         },
     )
     assert response.status_code == 201
 
     # Check predictions were made
-    print(client.get("/api/project/phishing_project").json())
+    response = client.get("/api/project/phishing_project").json()
+    assert response["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
+    assert response["experiments"]["phishing_experiment_1"]["n_learnings"] == 0
+    assert response["experiments"]["phishing_experiment_2"]["n_predictions"] == 10
+    assert response["experiments"]["phishing_experiment_2"]["n_learnings"] == 0
+
+    # The first 10 samples were sent without labels -- send them in now
+    for i, (_, y) in enumerate(datasets.Phishing().take(10)):
+        assert (
+            client.post(
+                "/api/message-bus/test_mb",
+                json={
+                    "topic": "phishing_project_targets",
+                    "key": str(i),
+                    "value": json.dumps(y),
+                },
+            ).status_code
+            == 201
+        )
+
+    # We're using a synchronous task runner. Therefore, even though the labels have been sent, the
+    # experiments are not automatically picking them up for learning. We have to explicitely make
+    # them learn.
+    response = client.put("/api/experiment/phishing_experiment_1/unpause")
+    assert response.status_code == 200
+    response = client.put("/api/experiment/phishing_experiment_2/unpause")
+    assert response.status_code == 200
+
+    # Check learning happened
+    response = client.get("/api/project/phishing_project").json()
+    assert response["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
+    assert response["experiments"]["phishing_experiment_1"]["n_learnings"] == 10
+    assert response["experiments"]["phishing_experiment_2"]["n_predictions"] == 10
+    assert response["experiments"]["phishing_experiment_2"]["n_learnings"] == 10
+
     raise ValueError
 
-    # TODO: check predictions were made for both experiments
-    # TODO: send labels
-    # TODO: get performance
-    # TODO: run learning task
+    # TODO: move stream_processor.py methods to logic.py, basically an if-table based on stream processor and task
+    # TODO: add message bus routes for sending features and labels
+
+    # TODO: get model accuracy (worse possible at first)
     # TODO: send more unlabelled samples
     # TODO: send labels
-    # TODO: get performance
+    # TODO: get performance (should be better)
     # TODO: get best model
     # TODO: compare to doing it here
 
-    # TODO: go through in old_logic.py
+    # TODO: go through in old_logic.py, see what's missing (pausing/unpausing?é")
     # TODO: make an SDK!
