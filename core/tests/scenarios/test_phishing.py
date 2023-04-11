@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 import sqlmodel
 import sqlmodel.pool
-from river import datasets, linear_model, preprocessing, forest
+from river import datasets, linear_model, preprocessing
 
 from core.main import app
 from core.db import engine, get_session
@@ -159,7 +159,7 @@ def test_phishing(
     assert response.status_code == 201
 
     # Create a second experiment
-    model = forest.AMFClassifier()
+    model = preprocessing.StandardScaler() | linear_model.Perceptron()
     model.learn = model.learn_one
     model.predict = model.predict_one
     response = client.post(
@@ -178,8 +178,10 @@ def test_phishing(
     response = client.get("/api/project/phishing_project").json()
     assert response["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
     assert response["experiments"]["phishing_experiment_1"]["n_learnings"] == 0
+    assert response["experiments"]["phishing_experiment_1"]["accuracy"] == 0
     assert response["experiments"]["phishing_experiment_2"]["n_predictions"] == 10
     assert response["experiments"]["phishing_experiment_2"]["n_learnings"] == 0
+    assert response["experiments"]["phishing_experiment_2"]["accuracy"] == 0
 
     # The first 10 samples were sent without labels -- send them in now
     for i, (_, y) in enumerate(datasets.Phishing().take(10)):
@@ -207,20 +209,61 @@ def test_phishing(
     response = client.get("/api/project/phishing_project").json()
     assert response["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
     assert response["experiments"]["phishing_experiment_1"]["n_learnings"] == 10
+    assert response["experiments"]["phishing_experiment_1"]["accuracy"] == 0.3
     assert response["experiments"]["phishing_experiment_2"]["n_predictions"] == 10
     assert response["experiments"]["phishing_experiment_2"]["n_learnings"] == 10
+    assert response["experiments"]["phishing_experiment_2"]["accuracy"] == 0.3
 
-    raise ValueError
+    # Send next 5 samples, with labels
+    for i, (x, y) in enumerate(datasets.Phishing().take(15)):
+        if i < 10:
+            continue
+        assert (
+            client.post(
+                "/api/message-bus/test_mb",
+                json={
+                    "topic": "phishing_project_features",
+                    "key": str(i),
+                    "value": json.dumps(x),
+                },
+            ).status_code
+            == 201
+        )
+        assert (
+            client.post(
+                "/api/message-bus/test_mb",
+                json={
+                    "topic": "phishing_project_targets",
+                    "key": str(i),
+                    "value": json.dumps(y),
+                },
+            ).status_code
+            == 201
+        )
 
-    # TODO: move stream_processor.py methods to logic.py, basically an if-table based on stream processor and task
-    # TODO: add message bus routes for sending features and labels
+    # Run the models
+    response = client.put("/api/experiment/phishing_experiment_1/unpause")
+    assert response.status_code == 200
+    response = client.put("/api/experiment/phishing_experiment_2/unpause")
+    assert response.status_code == 200
 
-    # TODO: get model accuracy (worse possible at first)
-    # TODO: send more unlabelled samples
-    # TODO: send labels
-    # TODO: get performance (should be better)
-    # TODO: get best model
-    # TODO: compare to doing it here
+    # Check stats
+    response = client.get("/api/project/phishing_project").json()
+    assert response["experiments"]["phishing_experiment_1"]["n_predictions"] == 15
+    assert response["experiments"]["phishing_experiment_1"]["n_learnings"] == 15
+    assert (
+        round(response["experiments"]["phishing_experiment_1"]["accuracy"], 3) == 0.467
+    )
+    assert response["experiments"]["phishing_experiment_2"]["n_predictions"] == 15
+    assert response["experiments"]["phishing_experiment_2"]["n_learnings"] == 15
+    assert (
+        round(response["experiments"]["phishing_experiment_2"]["accuracy"], 3) == 0.533
+    )
 
-    # TODO: go through in old_logic.py, see what's missing (pausing/unpausing?é")
+    # TODO: go through in old_logic.py, see what's missing (pausing/unpausing?")
+    # TODO: revisit API interface, decouple it from models (add message bus routes for sending features and labels?)
     # TODO: make an SDK!
+
+    # TODO: finish tests in test_logic.py
+
+    # TODO: test scenario with two batch models that can't learn

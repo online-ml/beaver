@@ -5,7 +5,7 @@ import sqlmodel as sqlm
 from core import db, enums, models, infra
 
 
-def iter_dataset(experiment_name: str, since: dt.datetime):
+def iter_dataset_for_experiment(experiment_name: str, since: dt.datetime):
 
     dataset_name = f"{experiment_name}_dataset"
 
@@ -72,13 +72,100 @@ def iter_dataset(experiment_name: str, since: dt.datetime):
         (
             dt.datetime.fromisoformat(r["ts"]),
             r["key"],
-            json.loads(r["features"]),
+            json.loads(r["features"]) if r["features"] else None,
             json.loads(r["target"]) if r["target"] else None,
         )
         for r in project.stream_processor.infra.stream_view(
             name=dataset_name, since=since
         )
     )
+
+
+def get_experiment_performance_for_project(project_name: str) -> dict:
+
+    performance_view_name = f"{project_name}_performance"
+
+    with db.session() as session:
+        project = session.get(models.Project, project_name)
+        project.stream_processor
+        project.target
+
+    if project.target is None:
+        return {}
+
+    if project.stream_processor.protocol == enums.StreamProcessor.sqlite.value:
+        if project.task == enums.Task.binary_clf.value:
+            query = f"""
+            SELECT
+                experiment,
+                COALESCE((tn + tp) / NULLIF(n, 0), 0) AS accuracy,
+                COALESCE(tp / NULLIF((tp + fn), 0), 0) AS recall,
+                COALESCE(tp / NULLIF((tp + fp), 0), 0) AS precision
+            FROM (
+                SELECT
+                    predictions.experiment,
+                    CAST(COUNT(*) FILTER (WHERE y_pred AND y_true) AS REAL) AS tp,
+                    CAST(COUNT(*) FILTER (WHERE y_pred AND NOT y_true) AS REAL) AS fp,
+                    CAST(COUNT(*) FILTER (WHERE NOT y_pred AND NOT y_true) AS REAL) AS tn,
+                    CAST(COUNT(*) FILTER (WHERE NOT y_pred AND y_true) AS REAL) AS fn,
+                    CAST(COUNT(*) AS REAL) AS n
+                FROM (
+                    SELECT
+                        key,
+                        JSON_EXTRACT(value, '$.prediction') = 'true' AS y_pred,
+                        JSON_EXTRACT(value, '$.experiment') AS experiment
+                    FROM messages
+                    WHERE topic = '{project.predictions_topic_name}'
+                ) predictions
+                LEFT JOIN (
+                    SELECT
+                        {project.target.key_field} AS key,
+                        {project.target.target_field} = 'true' as y_true
+                    FROM {project.target_view_name}
+                ) targets ON
+                    targets.key = predictions.key
+                GROUP BY 1
+            )
+            """
+        elif project.task == enums.Task.regression.value:
+            query = f"""
+            SELECT
+                experiment,
+                AVG(POW(y_true - y_pred, 2)) AS mse,
+                AVG(ABS(y_true - y_pred)) AS mae
+            FROM (
+                SELECT
+                    key,
+                    CAST(JSON_EXTRACT(value, '$.prediction') AS FLOAT) AS y_pred,
+                    JSON_EXTRACT(value, '$.experiment') AS experiment
+                FROM messages
+                WHERE topic = '{project.predictions_topic_name}'
+            ) predictions
+            LEFT JOIN (
+                SELECT
+                    {project.target.key_field} AS key,
+                    {project.target.target_field} as y_true
+                FROM {project.target_view_name}
+            ) targets ON
+                targets.key = predictions.key
+            GROUP BY 1
+            """
+        else:
+            raise RuntimeError(
+                f"Unsupported task {project.task} for stream processor protocol {project.stream_processor.protocol}"
+            )
+        project.stream_processor.infra.create_view(
+            name=performance_view_name, query=query
+        )
+    else:
+        raise RuntimeError(
+            f"Unsupported stream processor protocol: {project.stream_processor.protocol}"
+        )
+
+    return {
+        r.pop("experiment"): r
+        for r in project.stream_processor.infra.stream_view(name=performance_view_name)
+    }
 
 
 def do_progressive_learning(experiment_name: str):
@@ -102,7 +189,7 @@ def do_progressive_learning(experiment_name: str):
     t6 k2 -- y2  =>  learn(x2, y2)
     ```
 
-    Each chunk is built and streamed thanks to iter_dataset.
+    Each chunk is built and streamed thanks to iter_dataset_for_experiment.
 
     The idea is that this functions is run in the background repeatidly. This way, the models stay
     up-to-date, and predictions are made as soon as possible.
@@ -124,13 +211,19 @@ def do_progressive_learning(experiment_name: str):
         dt.datetime.min if experiment.start_from_top else experiment.created_at
     )
 
-    for ts, key, features, label in iter_dataset(
+    # When the model learns, it uses the same features that were used for making a prediction. This
+    # is by design, to prevent leakage. However, if a prediction has not been made yet, then labels
+    # won't be accompanied with the relevant features. Therefore, we keep them in memory so they
+    # can be used for learning.
+    features_used_for_predicting = {}
+
+    for ts, key, features, label in iter_dataset_for_experiment(
         experiment_name=experiment.name,
         since=experiment.last_sample_ts or experiment.created_at,
     ):
         # LEARNING
         if label is not None:
-            model.learn(features, label)
+            model.learn(features or features_used_for_predicting[key], label)
             job.n_learnings += 1
         # PREDICTING
         else:
@@ -138,18 +231,19 @@ def do_progressive_learning(experiment_name: str):
             message_bus.infra.send(
                 infra.Message(
                     topic=project.predictions_topic_name,
-                    key=key,
+                    key=key,  # TODO: the key has to be unique, and here it won't be because a single topic is used
                     value=json.dumps(
                         {
                             "project": project.name,
                             "experiment": experiment.name,
-                            "prediction": y_pred,
-                            "features": features,
+                            "prediction": json.dumps(y_pred),
+                            "features": json.dumps(features),
                         }
                     ),
                 )
             )
             job.n_predictions += 1
+            features_used_for_predicting[key] = features
         # Bookkeeping
         experiment.last_sample_ts = ts
 
@@ -163,7 +257,7 @@ def do_progressive_learning(experiment_name: str):
 
 def monitor_experiments(project_name: str):
 
-    perf_view_name = f"performance_{project_name}"
+    experiment_performance = get_experiment_performance_for_project(project_name)
 
     with db.session() as session:
         project = session.get(models.Project, project_name)
@@ -171,6 +265,7 @@ def monitor_experiments(project_name: str):
             experiment.name: {
                 "n_learnings": sum(job.n_learnings for job in experiment.jobs),
                 "n_predictions": sum(job.n_predictions for job in experiment.jobs),
+                **experiment_performance.get(experiment.name, {}),
             }
             for experiment in project.experiments
         }

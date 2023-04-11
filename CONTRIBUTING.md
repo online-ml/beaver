@@ -1,6 +1,8 @@
 # Contribution guidelines
 
-## Python environment
+## Setup
+
+### 🐍 Python environment
 
 Regardless of how you develop, you need a Python environment to run pre-commit hooks.
 
@@ -55,10 +57,10 @@ pytest
 ```
 
 
-## 🐳 Developping with Docker
+### 🐳 Developping with Docker
 
 ```sh
-git clone https://github.com/OracLabs/orac
+git clone https://github.com/online-ml/beaver
 cd orac
 
 # Run the stack
@@ -78,3 +80,24 @@ docker compose down
 # Clean slate
 docker compose down --rmi all -v --remove-orphans
 ```
+
+## Adding infrastructure
+
+### Message bus
+
+- Add attribute to `enums/MessageBus`
+- Add class to `infra/message_bus.py`
+- Add `if` condition to `models/MessageBus.infra`
+
+### Stream processor
+
+- Add attribute to `enums.MessageBus`
+- Add class to `infra/stream_processor.py`
+- Add `if` condition to `models/MessageBus.infra`
+- Add iteration and performance logic to `core/logic.py`
+
+### Job runner
+
+- Add attribute to `enums/JobRunner`
+- Add class to `infra/job_runner.py`
+- Add `if` condition to `models/JobRunner.infra`
