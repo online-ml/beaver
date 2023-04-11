@@ -6,8 +6,8 @@ import pathlib
 import dill
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+import sqlmodel
+import sqlmodel.pool
 from river import datasets, linear_model, preprocessing, forest
 
 from core.main import app
@@ -17,18 +17,18 @@ from core.db import engine, get_session
 @pytest.fixture(name="session")
 def session_fixture():
 
-    engine = create_engine(
+    engine = sqlmodel.create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+        poolclass=sqlmodel.pool.StaticPool,
     )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
+    sqlmodel.SQLModel.metadata.create_all(engine)
+    with sqlmodel.Session(engine) as session:
         yield session
 
 
 @pytest.fixture(name="client")
-def client_fixture(session: Session):
+def client_fixture(session: sqlmodel.Session):
     def get_session_override():
         yield session
 
@@ -120,7 +120,7 @@ def test_phishing(
         "/api/target",
         json={
             "project_name": "phishing_project",
-            "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_targets'",
+            "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_project_targets'",
             "key_field": "key",
             "ts_field": "created_at",
             "target_field": "value",
@@ -153,6 +153,7 @@ def test_phishing(
             "project_name": "phishing_project",
             "feature_set_name": "phishing_project_features",
             "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
+            "start_from_top": True,
         },
     )
     assert response.status_code == 201
@@ -168,6 +169,7 @@ def test_phishing(
             "project_name": "phishing_project",
             "feature_set_name": "phishing_project_features",
             "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
+            "start_from_top": True,
         },
     )
     assert response.status_code == 201

@@ -1,17 +1,17 @@
 import fastapi
-import sqlmodel as sqlm
+import sqlmodel
 
 from core import infra as _infra, enums
 
 
-class StreamProcessor(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
+class StreamProcessor(sqlmodel.SQLModel, table=True):  # type: ignore[call-arg]
     __tablename__ = "stream_processor"
 
-    name: str = sqlm.Field(primary_key=True)
+    name: str = sqlmodel.Field(primary_key=True)
     protocol: enums.StreamProcessor
     url: str
 
-    projects: list["Project"] = sqlm.Relationship(back_populates="stream_processor")  # type: ignore[name-defined]
+    projects: list["Project"] = sqlmodel.Relationship(back_populates="stream_processor")  # type: ignore[name-defined]
 
     @property
     def infra(self):

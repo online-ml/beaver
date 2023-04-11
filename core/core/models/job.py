@@ -1,11 +1,11 @@
 import uuid
-import sqlmodel as sqlm
+import sqlmodel
 
 
-class Job(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
-    id: uuid.UUID = sqlm.Field(default_factory=uuid.uuid4, primary_key=True)
-    n_predictions: int = sqlm.Field(default=0)
-    n_learnings: int = sqlm.Field(default=0)
+class Job(sqlmodel.SQLModel, table=True):  # type: ignore[call-arg]
+    id: uuid.UUID = sqlmodel.Field(default_factory=uuid.uuid4, primary_key=True)
+    n_predictions: int = sqlmodel.Field(default=0)
+    n_learnings: int = sqlmodel.Field(default=0)
 
-    experiment_name: str = sqlm.Field(foreign_key="experiment.name")
-    experiment: "Experiment" = sqlm.Relationship(back_populates="jobs")  # type: ignore[name-defined]
+    experiment_name: str = sqlmodel.Field(foreign_key="experiment.name")
+    experiment: "Experiment" = sqlmodel.Relationship(back_populates="jobs")  # type: ignore[name-defined]

@@ -22,10 +22,13 @@ class SQLiteStreamProcessor:
             con.execute(f"DROP VIEW IF EXISTS {name}")
             con.execute(f"CREATE VIEW {name} AS {query}")
 
-    def stream_view(self, name, since):
+    def stream_view(self, name, since: dt.datetime | None):
         with sqlite3.connect(self.url) as con:
             con.row_factory = sqlite3.Row
-            rows = list(map(dict, con.execute(f"SELECT * FROM {name}")))
+            query = f"SELECT * FROM {name}"
+            if since:
+                query += f" WHERE ts > '{since}'"
+            rows = list(map(dict, con.execute(query)))
         yield from rows
 
 

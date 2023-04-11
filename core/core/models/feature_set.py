@@ -1,24 +1,24 @@
 import datetime as dt
 import json
 import fastapi
-import sqlmodel as sqlm
+import sqlmodel
 
 
-class FeatureSet(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
+class FeatureSet(sqlmodel.SQLModel, table=True):  # type: ignore[call-arg]
     __tablename__ = "feature_set"
 
-    name: str = sqlm.Field(primary_key=True)
+    name: str = sqlmodel.Field(primary_key=True)
     query: str
     key_field: str
     ts_field: str
     features_field: str
 
-    project_name: str = sqlm.Field(default=None, foreign_key="project.name")
-    project: "Project" = sqlm.Relationship(  # type: ignore[name-defined]
+    project_name: str = sqlmodel.Field(default=None, foreign_key="project.name")
+    project: "Project" = sqlmodel.Relationship(  # type: ignore[name-defined]
         sa_relationship_kwargs={"uselist": False}
     )
 
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="feature_set")  # type: ignore[name-defined]
+    experiments: list["Experiment"] = sqlmodel.Relationship(back_populates="feature_set")  # type: ignore[name-defined]
 
     def stream(self, since: dt.datetime):
         return (

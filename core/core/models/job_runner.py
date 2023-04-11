@@ -1,17 +1,17 @@
 import fastapi
-import sqlmodel as sqlm
+import sqlmodel
 
 from core import infra as _infra, enums
 
 
-class JobRunner(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
+class JobRunner(sqlmodel.SQLModel, table=True):  # type: ignore[call-arg]
     __tablename__ = "job_runner"
 
-    name: str = sqlm.Field(primary_key=True)
+    name: str = sqlmodel.Field(primary_key=True)
     protocol: enums.JobRunner
-    url: str | None = sqlm.Field(default=None)
+    url: str | None = sqlmodel.Field(default=None)
 
-    projects: list["Project"] = sqlm.Relationship(back_populates="job_runner")  # type: ignore[name-defined]
+    projects: list["Project"] = sqlmodel.Relationship(back_populates="job_runner")  # type: ignore[name-defined]
 
     @property
     def infra(self):

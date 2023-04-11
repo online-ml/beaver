@@ -1,30 +1,29 @@
 from typing import Optional
 import fastapi
-import sqlmodel as sqlm
+import sqlmodel
 
 from core import enums
 
 router = fastapi.APIRouter()
 
 
-class Project(sqlm.SQLModel, table=True):  # type: ignore[call-arg]
-    name: str = sqlm.Field(default=None, primary_key=True)
+class Project(sqlmodel.SQLModel, table=True):  # type: ignore[call-arg]
+    name: str = sqlmodel.Field(default=None, primary_key=True)
     task: enums.Task
 
-    message_bus_name: str = sqlm.Field(foreign_key="message_bus.name")
-    message_bus: "MessageBus" = sqlm.Relationship(back_populates="projects")  # type: ignore[name-defined]
+    message_bus_name: str = sqlmodel.Field(foreign_key="message_bus.name")
+    message_bus: "MessageBus" = sqlmodel.Relationship(back_populates="projects")  # type: ignore[name-defined]
 
-    stream_processor_name: str = sqlm.Field(foreign_key="stream_processor.name")
-    stream_processor: "StreamProcessor" = sqlm.Relationship(back_populates="projects")  # type: ignore[name-defined]
+    stream_processor_name: str = sqlmodel.Field(foreign_key="stream_processor.name")
+    stream_processor: "StreamProcessor" = sqlmodel.Relationship(back_populates="projects")  # type: ignore[name-defined]
 
-    job_runner_name: str = sqlm.Field(foreign_key="job_runner.name")
-    job_runner: "JobRunner" = sqlm.Relationship(back_populates="projects")  # type: ignore[name-defined]
+    job_runner_name: str = sqlmodel.Field(foreign_key="job_runner.name")
+    job_runner: "JobRunner" = sqlmodel.Relationship(back_populates="projects")  # type: ignore[name-defined]
 
-    target_id: int | None = sqlm.Field(default=None, foreign_key="target.id")
-    target: Optional["Target"] = sqlm.Relationship(back_populates="project")  # type: ignore[name-defined]
+    target: Optional["Target"] = sqlmodel.Relationship(back_populates="project", sa_relationship_kwargs={"uselist": False})  # type: ignore[name-defined]
 
-    feature_sets: list["FeatureSet"] = sqlm.Relationship(back_populates="project")  # type: ignore[name-defined]
-    experiments: list["Experiment"] = sqlm.Relationship(back_populates="project")  # type: ignore[name-defined]
+    feature_sets: list["FeatureSet"] = sqlmodel.Relationship(back_populates="project")  # type: ignore[name-defined]
+    experiments: list["Experiment"] = sqlmodel.Relationship(back_populates="project")  # type: ignore[name-defined]
 
     @property
     def target_view_name(self):

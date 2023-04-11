@@ -28,6 +28,7 @@ class ExperimentOut(pydantic.BaseModel):
     last_sample_ts: dt.datetime | None
     project_name: str
     feature_set_name: str
+    start_from_top: bool
 
 
 @router.post("/", status_code=201)
