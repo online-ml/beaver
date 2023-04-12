@@ -49,7 +49,7 @@ def create_experiment(
     experiment.save(session)
 
     # Run inference and learning jobs
-    job_id = project.job_runner.infra.start(
+    _ = project.job_runner.infra.start(
         functools.partial(logic.do_progressive_learning, experiment.name)
     )
 
