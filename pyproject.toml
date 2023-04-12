@@ -29,6 +29,7 @@ httpx = "^0.23.3"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.22.0"
+streamlit = "^1.21.0"
 
 [tool.ruff]
 line-length = 100

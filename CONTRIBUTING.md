@@ -20,8 +20,8 @@ curl -sSL https://install.python-poetry.org | python3 -
 # Poetry will then try to find the current python of your shell.
 poetry config virtualenvs.prefer-active-python true
 
-# orac uses river and river depends on rust,
-# need to install rust compiler first (for unix based systems)
+# Beaver uses River and River depends on Rust,
+# need to install Rust compiler first (for UNIX based systems)
 poetry run curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # install requirements, this will also create virtualenv
@@ -61,7 +61,7 @@ pytest
 
 ```sh
 git clone https://github.com/online-ml/beaver
-cd orac
+cd beaver
 
 # Run the stack
 docker compose up --build -d
@@ -101,3 +101,11 @@ docker compose down --rmi all -v --remove-orphans
 - Add attribute to `enums/JobRunner`
 - Add class to `infra/job_runner.py`
 - Add `if` condition to `models/JobRunner.infra`
+
+## User interface
+
+The user interface is static. It's only purpose is to display information. It's not meant to be interactive. Interaction happens through the API and/or the Python SDK.
+
+```sh
+streamlit run ui/main.py
+```

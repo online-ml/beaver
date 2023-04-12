@@ -1,6 +1,6 @@
 <h1>Orac • MLOps for (online) machine learning</h1>
 
-**🚧 The purpose of Orac is to make launching and hosting an end-to-end online machine learning pipeline easy. It is the next generation of 'beaver' and part of the [online machine learning](https://github.com/online-ml) ecosystem. We have a first working sample [here](https://github.com/MaxHalford/taxi-demo-rp-mz-rv-rd-st) and more to come. 
+**🚧 The purpose of Orac is to make launching and hosting an end-to-end online machine learning pipeline easy. It is the next generation of 'beaver' and part of the [online machine learning](https://github.com/online-ml) ecosystem. We have a first working sample [here](https://github.com/MaxHalford/taxi-demo-rp-mz-rv-rd-st) and more to come.
 
 <div align="center" >
   <img src="https://user-images.githubusercontent.com/18452001/214675829-7ef3f6f4-a1dc-41a2-9ce2-7b8cca3eb6df.png" width="40%" align="right" />
@@ -27,8 +27,8 @@ Orac is...
 The easiest way is to run the provided [`docker-compose.yaml`](docker-compose.yaml) 🐳
 
 ```sh
-git clone git@github.com:OracLabs/orac.git
-cd orac
+git clone git@github.com:online-ml/beaver.git
+cd beaver
 docker-compose up
 ```
 
