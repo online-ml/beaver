@@ -4,6 +4,7 @@ import functools
 import pathlib
 import pytest
 import sqlmodel
+import sqlmodel.pool
 from core import enums, infra, logic, models
 
 
@@ -54,6 +55,8 @@ def synchronous_processor(session, sqlite_mb_path: pathlib.Path):
 
 def test_iter_dataset(session, message_bus, stream_processor, job_runner):
     """Test the iter_dataset function using different message buses and stream processors."""
+
+    # TODO: parametrize the fixtures, so different combinations can be tested
 
     project = models.Project(
         name="test_project",

@@ -7,3 +7,4 @@ from .stream_processor import StreamProcessor
 from .stream_processor import SQLiteStreamProcessor
 from .job_runner import JobRunner
 from .job_runner import SynchronousJobRunner
+from .job_runner import CeleryJobRunner

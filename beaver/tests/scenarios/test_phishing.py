@@ -12,6 +12,7 @@ from river import datasets, linear_model, preprocessing
 
 from core.main import app
 from core.db import engine, get_session
+from sdk import Project
 
 
 @pytest.fixture(name="session")
@@ -199,9 +200,9 @@ def test_phishing(
     # We're using a synchronous task runner. Therefore, even though the labels have been sent, the
     # experiments are not automatically picking them up for learning. We have to explicitely make
     # them learn.
-    response = client.put("/api/experiment/phishing_experiment_1/unpause")
+    response = client.put("/api/experiment/phishing_experiment_1/start")
     assert response.status_code == 200
-    response = client.put("/api/experiment/phishing_experiment_2/unpause")
+    response = client.put("/api/experiment/phishing_experiment_2/start")
     assert response.status_code == 200
 
     # Check learning happened
@@ -241,9 +242,9 @@ def test_phishing(
         )
 
     # Run the models
-    response = client.put("/api/experiment/phishing_experiment_1/unpause")
+    response = client.put("/api/experiment/phishing_experiment_1/start")
     assert response.status_code == 200
-    response = client.put("/api/experiment/phishing_experiment_2/unpause")
+    response = client.put("/api/experiment/phishing_experiment_2/start")
     assert response.status_code == 200
 
     # Check stats
@@ -258,11 +259,3 @@ def test_phishing(
     assert (
         round(response["experiments"]["phishing_experiment_2"]["accuracy"], 3) == 0.533
     )
-
-    # TODO: go through in old_logic.py, see what's missing (pausing/unpausing?")
-    # TODO: revisit API interface, decouple it from models (add message bus routes for sending features and labels?)
-    # TODO: make an SDK!
-
-    # TODO: finish tests in test_logic.py
-
-    # TODO: test scenario with two batch models that can't learn

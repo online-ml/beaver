@@ -50,19 +50,30 @@ def create_experiment(
     experiment.save(session)
 
     # Run inference and learning jobs
-    project.job_runner.infra.run(
+    job_id = project.job_runner.infra.start(
         functools.partial(logic.do_progressive_learning, experiment.name)
     )
 
     return experiment
 
 
-@router.put("/{name}/unpause")
-def unpause_experiment(
+@router.put("/{name}/start")
+def start_experiment(
     name: str,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
     experiment = session.get(models.Experiment, name)
-    experiment.project.job_runner.infra.run(
+    experiment.project.job_runner.infra.start(
+        functools.partial(logic.do_progressive_learning, experiment.name)
+    )
+
+
+@router.put("/{name}/stop")
+def stop_experiment(
+    name: str,
+    session: sqlm.Session = fastapi.Depends(db.get_session),
+):
+    experiment = session.get(models.Experiment, name)
+    experiment.project.job_runner.infra.start(
         functools.partial(logic.do_progressive_learning, experiment.name)
     )
