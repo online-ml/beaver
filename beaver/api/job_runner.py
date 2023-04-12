@@ -1,5 +1,6 @@
 import fastapi
 import sqlmodel as sqlm
+
 from beaver import db, models
 
 router = fastapi.APIRouter()

@@ -1,5 +1,6 @@
-from beaver.main import app
 from fastapi.testclient import TestClient
+
+from beaver.main import app
 
 client = TestClient(app)
 
