@@ -10,8 +10,8 @@ import sqlmodel
 import sqlmodel.pool
 from river import datasets, linear_model, preprocessing
 
-from core.main import app
-from core.db import engine, get_session
+from beaver.main import app
+from beaver.db import engine, get_session
 from sdk import Project
 
 

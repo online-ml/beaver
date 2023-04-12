@@ -5,7 +5,7 @@ import pathlib
 import pytest
 import sqlmodel
 import sqlmodel.pool
-from core import enums, infra, logic, models
+from beaver import enums, infra, logic, models
 
 
 @functools.cache

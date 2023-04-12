@@ -21,7 +21,7 @@ def get_session():
 @contextlib.contextmanager
 def session():
     # HACK
-    from core.main import app
+    from beaver.main import app
 
     try:
         session = next(app.dependency_overrides[get_session]())

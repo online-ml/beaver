@@ -6,7 +6,7 @@ import fastapi
 from starlette.middleware.cors import CORSMiddleware
 
 from .settings import settings
-from core import api, db
+from beaver import api, db
 
 
 app = fastapi.FastAPI(

@@ -1,7 +1,7 @@
 import fastapi
 import sqlmodel
 
-from core import enums
+from beaver import enums
 
 from .base import Base
 

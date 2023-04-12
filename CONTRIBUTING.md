@@ -46,8 +46,7 @@ poetry shell
 Now you can run the server.
 
 ```sh
-python init_db.py &&
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn beaver.main:app --port 8000 --reload
 ```
 
 And also run unit tests.
@@ -107,5 +106,6 @@ docker compose down --rmi all -v --remove-orphans
 The user interface is static. It's only purpose is to display information. It's not meant to be interactive. Interaction happens through the API and/or the Python SDK.
 
 ```sh
-streamlit run ui/main.py
+export BEAVER_API_HOST=http://localhost:8000
+streamlit run ui/Home.py
 ```

@@ -3,7 +3,7 @@ import json
 import uuid
 import fastapi
 import sqlmodel as sqlm
-from core import db, enums, models, infra
+from beaver import db, enums, models, infra
 
 
 def iter_dataset_for_experiment(

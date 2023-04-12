@@ -32,18 +32,13 @@ cd beaver
 docker-compose up
 ```
 
-Go to [http://localhost:3000](http://localhost:3000/) to check out the UI. This is a read-only interface. Interacting with the system happens through an API.
-
-Go to [http://localhost:8080/topics](http://localhost:8080/topics) to see all the kafka topics and their content easily as you run your models.
+Go to [http://localhost:8501/](http://localhost:8501/) to access the user interface.
 
 The recommended next step is to move on to the examples. That will give you an understanding of the workflow which Beaver enables.
 
 ## 👀 Examples
 
 - [🚕 Taxis](examples/taxis)
-
-## 📈 Dashboard
-Go to [http://localhost:4000/](http://localhost:4000/d/-GzUaVo4z/model-performance-dashboard-sample?orgId=1) to check out the sample Grafana Dashboard included for Taxi demo.
 
 ## 🚀 Deployment
 
