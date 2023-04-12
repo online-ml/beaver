@@ -218,7 +218,7 @@ def do_progressive_learning(experiment_name: str):
     # is by design, to prevent leakage. However, if a prediction has not been made yet, then labels
     # won't be accompanied with the relevant features. Therefore, we keep them in memory so they
     # can be used for learning.
-    features_used_for_predicting = {}
+    features_used_for_predicting: dict[str, dict] = {}
 
     for ts, key, features, label in iter_dataset_for_experiment(
         experiment_name=experiment.name,
