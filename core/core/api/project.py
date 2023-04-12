@@ -10,15 +10,26 @@ router = fastapi.APIRouter()
 def create_project(
     project: models.Project, session: sqlm.Session = fastapi.Depends(db.get_session)
 ):
-    processor = session.get(models.StreamProcessor, project.stream_processor_name)
-    if not processor:
+
+    if not session.get(models.StreamProcessor, project.stream_processor_name):
         raise fastapi.HTTPException(
-            status_code=404, detail="Stream processor not found"
+            status_code=404,
+            detail=f"Stream processor '{project.stream_processor_name}' not found",
         )
 
-    session.add(project)
-    session.commit()
-    session.refresh(project)
+    if not session.get(models.MessageBus, project.message_bus_name):
+        raise fastapi.HTTPException(
+            status_code=404,
+            detail=f"Message bus '{project.message_bus_name}' not found",
+        )
+
+    if not session.get(models.JobRunner, project.job_runner_name):
+        raise fastapi.HTTPException(
+            status_code=404,
+            detail=f"Job runner '{project.job_runner_name}' not found",
+        )
+
+    project.save(session)
 
     return project
 

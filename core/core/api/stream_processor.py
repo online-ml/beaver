@@ -11,9 +11,7 @@ def create_stream_processor(
     stream_processor: models.StreamProcessor,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
-    session.add(stream_processor)
-    session.commit()
-    session.refresh(stream_processor)
+    stream_processor.save(session)
     return stream_processor
 
 

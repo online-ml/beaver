@@ -11,9 +11,7 @@ def create_message_bus(
     message_bus: models.MessageBus,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
-    session.add(message_bus)
-    session.commit()
-    session.refresh(message_bus)
+    message_bus.save(session)
     return message_bus
 
 

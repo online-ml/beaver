@@ -5,18 +5,18 @@ import kafka
 import sqlmodel as sqlm
 from river import datasets, linear_model, preprocessing
 
-from api import (  # isort:skip
-    db,
-    experiments,
-    feature_sets,
-    models,
-    processors,
-    runners,
-    sinks,
-    sources,
-    targets,
-    enums,
-)
+# from core import (  # isort:skip
+#     db,
+#     experiments,
+#     feature_sets,
+#     models,
+#     processors,
+#     runners,
+#     sinks,
+#     sources,
+#     targets,
+#     enums,
+# )
 
 if __name__ == "__main__":
 

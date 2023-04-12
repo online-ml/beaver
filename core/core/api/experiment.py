@@ -47,10 +47,7 @@ def create_experiment(
             status_code=400, detail="Model does not implement the expected protocol"
         )
     experiment.model_state = dill.dumps(model_obj)
-
-    session.add(experiment)
-    session.commit()
-    session.refresh(experiment)
+    experiment.save(session)
 
     # Run inference and learning jobs
     project.job_runner.infra.run(

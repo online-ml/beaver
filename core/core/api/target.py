@@ -19,9 +19,7 @@ def create_target(
         name=project.target_view_name, query=target.query
     )
 
-    session.add(target)
-    session.commit()
-    session.refresh(target)
+    target.save(session)
 
     return target
 

@@ -21,9 +21,7 @@ def create_feature_set(
         name=feature_set.name, query=feature_set.query
     )
 
-    session.add(feature_set)
-    session.commit()
-    session.refresh(feature_set)
+    feature_set.save(session)
 
     return feature_set
 

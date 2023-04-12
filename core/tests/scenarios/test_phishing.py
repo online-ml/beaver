@@ -16,7 +16,6 @@ from core.db import engine, get_session
 
 @pytest.fixture(name="session")
 def session_fixture():
-
     engine = sqlmodel.create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},

@@ -1,15 +1,18 @@
 import datetime as dt
 import json
+import uuid
 import fastapi
 import sqlmodel as sqlm
 from core import db, enums, models, infra
 
 
-def iter_dataset_for_experiment(experiment_name: str, since: dt.datetime):
+def iter_dataset_for_experiment(
+    experiment_name: str, since: dt.datetime, session: sqlm.Session = None
+):
 
     dataset_name = f"{experiment_name}_dataset"
 
-    with db.session() as session:
+    with (session or db.session()) as session:
         experiment = session.get(models.Experiment, experiment_name)
         project = experiment.project
         project.stream_processor
@@ -46,7 +49,7 @@ def iter_dataset_for_experiment(experiment_name: str, since: dt.datetime):
             FROM {project.target_view_name} targets
             LEFT JOIN (
                 SELECT
-                    key,
+                    JSON_EXTRACT(value, '$.key') AS key,
                     JSON_EXTRACT(value, '$.features') AS features
                 FROM messages
                 WHERE topic = '{project.predictions_topic_name}'
@@ -111,7 +114,7 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
                     CAST(COUNT(*) AS REAL) AS n
                 FROM (
                     SELECT
-                        key,
+                        JSON_EXTRACT(value, '$.key') AS key,
                         JSON_EXTRACT(value, '$.prediction') = 'true' AS y_pred,
                         JSON_EXTRACT(value, '$.experiment') AS experiment
                     FROM messages
@@ -135,7 +138,7 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
                 AVG(ABS(y_true - y_pred)) AS mae
             FROM (
                 SELECT
-                    key,
+                    JSON_EXTRACT(value, '$.key') AS key,
                     CAST(JSON_EXTRACT(value, '$.prediction') AS FLOAT) AS y_pred,
                     JSON_EXTRACT(value, '$.experiment') AS experiment
                 FROM messages
@@ -231,9 +234,10 @@ def do_progressive_learning(experiment_name: str):
             message_bus.infra.send(
                 infra.Message(
                     topic=project.predictions_topic_name,
-                    key=key,  # TODO: the key has to be unique, and here it won't be because a single topic is used
+                    key=str(uuid.uuid4()),
                     value=json.dumps(
                         {
+                            "key": key,
                             "project": project.name,
                             "experiment": experiment.name,
                             "prediction": json.dumps(y_pred),

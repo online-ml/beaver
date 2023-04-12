@@ -11,9 +11,7 @@ def create_job_runner(
     job_runner: models.JobRunner,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
-    session.add(job_runner)
-    session.commit()
-    session.refresh(job_runner)
+    job_runner.save(session)
     return job_runner
 
 

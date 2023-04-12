@@ -3,14 +3,18 @@ import sqlmodel
 
 from core import infra as _infra, enums
 
+from .base import Base
 
-class MessageBus(sqlmodel.SQLModel, table=True):  # type: ignore[call-arg]
+
+class MessageBus(Base, table=True):  # type: ignore[call-arg]
     __tablename__ = "message_bus"
 
+    # Attributes
     name: str = sqlmodel.Field(primary_key=True)
     protocol: enums.MessageBus
     url: str
 
+    # Relationships
     projects: list["Project"] = sqlmodel.Relationship(back_populates="message_bus")  # type: ignore[name-defined]
 
     @property
