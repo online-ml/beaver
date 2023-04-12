@@ -22,7 +22,7 @@ class SQLiteStreamProcessor:
             con.execute(f"DROP VIEW IF EXISTS {name}")
             con.execute(f"CREATE VIEW {name} AS {query}")
 
-    def stream_view(self, name, since: dt.datetime = None):
+    def stream_view(self, name, since: dt.datetime | None = None):
         with sqlite3.connect(self.url) as con:
             con.row_factory = sqlite3.Row
             query = f"SELECT * FROM {name}"

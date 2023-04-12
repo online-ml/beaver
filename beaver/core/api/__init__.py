@@ -3,11 +3,11 @@ import fastapi
 from . import (
     experiment,
     feature_set,
+    job_runner,
     message_bus,
     project,
     stream_processor,
     target,
-    job_runner,
 )
 
 router = fastapi.APIRouter()
