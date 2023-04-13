@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+from beaver_sdk import Project
 
 BEAVER_API_HOST = os.environ["BEAVER_API_HOST"]
 

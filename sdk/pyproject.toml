@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "beaver_sdk"
+version = "0.1.0"
+description = ""
+authors = ["Max Halford <maxhalford25@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+requests = "^2.26.0"
+
+[tool.ruff]
+line-length = 100
+ignore = ["E501"]
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
