@@ -115,18 +115,9 @@ def test_phishing(
     )
 
     # Send 10 samples, without revealing answers
+    message_bus = sdk.message_bus("test_mb")
     for i, (x, _) in enumerate(datasets.Phishing().take(10)):
-        assert (
-            client.post(
-                "/api/message-bus/test_mb",  # TODO: derive message bus through project
-                json={
-                    "topic": "phishing_project_features",
-                    "key": str(i),
-                    "value": json.dumps(x),
-                },
-            ).status_code
-            == 201
-        )
+        message_bus.send(topic="phishing_project_features", key=i, value=x)
 
     # Create a target
     response = client.post(
