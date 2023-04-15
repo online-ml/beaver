@@ -3,16 +3,18 @@ import json
 import functools
 import collections
 import pathlib
+import urllib.parse
 import dill
 import pytest
 from fastapi.testclient import TestClient
 import sqlmodel
 import sqlmodel.pool
+import requests
 from river import datasets, linear_model, preprocessing
 
 from beaver.main import app
 from beaver.db import engine, get_session
-from sdk import Project
+import beaver_sdk
 
 
 @pytest.fixture(name="session")
@@ -27,25 +29,40 @@ def session_fixture():
         yield session
 
 
-@pytest.fixture(name="client")
-def client_fixture(session: sqlmodel.Session):
+@pytest.fixture()
+def client(session: sqlmodel.Session):
     def get_session_override():
         yield session
 
+    def request_override(*args, **kwargs):
+        # This is a hack so that the Beaver SDK talks to the TestClient, instead of requests
+        self, *args = args
+        method, endpoint, *args = args
+        endpoint = urllib.parse.urljoin(self.host, endpoint)
+        r = client.request(method, endpoint, *args, **kwargs)
+        r.raise_for_status()
+        return r
+
     app.dependency_overrides[get_session] = get_session_override
     client = TestClient(app)
+    beaver_sdk.SDK.request = request_override
     yield client
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(name="sqlite_mb_path")
+@pytest.fixture()
+def sdk():
+    return beaver_sdk.Instance(host="")
+
+
+@pytest.fixture()
 def sqlite_mb_path():
     here = pathlib.Path(__file__).parent
     yield here / "message_bus.db"
     (here / "message_bus.db").unlink(missing_ok=True)
 
 
-@pytest.fixture(name="create_message_bus")
+@pytest.fixture()
 def create_message_bus(client: TestClient, sqlite_mb_path: pathlib.Path):
 
     # Create source
@@ -58,7 +75,7 @@ def create_message_bus(client: TestClient, sqlite_mb_path: pathlib.Path):
     assert client.get("/api/message-bus/test_mb").json()["protocol"] == "SQLITE"
 
 
-@pytest.fixture(name="create_stream_processor")
+@pytest.fixture()
 def create_stream_processor(client: TestClient, sqlite_mb_path: pathlib.Path):
 
     # Create source
@@ -71,7 +88,7 @@ def create_stream_processor(client: TestClient, sqlite_mb_path: pathlib.Path):
     assert client.get("/api/stream-processor/test_sp").json()["protocol"] == "SQLITE"
 
 
-@pytest.fixture(name="create_job_runner")
+@pytest.fixture()
 def create_job_runner(client: TestClient, sqlite_mb_path: pathlib.Path):
 
     # Create source
@@ -85,21 +102,17 @@ def create_job_runner(client: TestClient, sqlite_mb_path: pathlib.Path):
 
 
 def test_phishing(
-    create_message_bus, create_stream_processor, create_job_runner, client
+    create_message_bus, create_stream_processor, create_job_runner, client, sdk
 ):
 
     # Create a project
-    response = client.post(
-        "/api/project",
-        json={
-            "name": "phishing_project",
-            "task": "BINARY_CLASSIFICATION",
-            "message_bus_name": "test_mb",
-            "stream_processor_name": "test_sp",
-            "job_runner_name": "test_tr",
-        },
+    sdk.project.create(
+        name="phishing_project",
+        task="BINARY_CLASSIFICATION",
+        message_bus_name="test_mb",
+        stream_processor_name="test_sp",
+        job_runner_name="test_tr",
     )
-    assert response.status_code == 201
 
     # Send 10 samples, without revealing answers
     for i, (x, _) in enumerate(datasets.Phishing().take(10)):
