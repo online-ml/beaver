@@ -14,7 +14,7 @@ class FeatureSet(Base, table=True):  # type: ignore[call-arg]
     query: str
     key_field: str
     ts_field: str
-    features_field: str
+    value_field: str
     project_name: str = sqlmodel.Field(default=None, foreign_key="project.name")
 
     # Relationships
@@ -28,7 +28,7 @@ class FeatureSet(Base, table=True):  # type: ignore[call-arg]
             {
                 "key": r[self.key_field],
                 "ts": dt.datetime.fromisoformat(r[self.ts_field]),
-                "features": json.loads(r[self.features_field]),
+                "features": json.loads(r[self.value_field]),
             }
             for r in self.project.stream_processor.infra.stream_view(
                 name=self.name, since=since

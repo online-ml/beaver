@@ -13,7 +13,7 @@ class Target(Base, table=True):  # type: ignore[call-arg]
     query: str
     key_field: str
     ts_field: str
-    target_field: str
+    value_field: str
 
     # Relationships
     project: "Project" = sqlmodel.Relationship(  # type: ignore[name-defined]

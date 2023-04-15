@@ -80,7 +80,7 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
         query=fs_query,
         key_field="key",
         ts_field="created_at",
-        features_field="value",
+        value_field="value",
     )
     feature_set.save(session)
     project.stream_processor.infra.create_view(
@@ -99,7 +99,7 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
         query=target_query,
         key_field="key",
         ts_field="created_at",
-        target_field="value",
+        value_field="value",
     )
     target.save(session)
     project.stream_processor.infra.create_view(

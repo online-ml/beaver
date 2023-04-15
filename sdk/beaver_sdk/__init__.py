@@ -13,12 +13,18 @@ class SDK:
         s = requests.Session()
         return s
 
-    def request(self, method, endpoint, session=None, **kwargs):
+    def request(self, method, endpoint, as_json=True, session=None, **kwargs):
         r = (session or self.session()).request(
             method=method, url=urllib.parse.urljoin(self.host, endpoint), **kwargs
         )
         r.raise_for_status()
-        return r
+        return r.json() if as_json else r
+
+    def get(self, endpoint, **kwargs):
+        return self.request("GET", endpoint, **kwargs)
+
+    def post(self, endpoint, **kwargs):
+        return self.request("POST", endpoint, **kwargs)
 
 
 class Instance:
@@ -40,8 +46,7 @@ class MessageBus(SDK):
         self.name = name
 
     def send(self, topic, key, value):
-        self.request(
-            "POST",
+        self.post(
             "",
             json={"topic": topic, "key": str(key), "value": json.dumps(value)},
         )
@@ -60,8 +65,7 @@ class ProjectFactory(SDK):
         job_runner_name: str,
     ):
         """Create a project."""
-        self.request(
-            "POST",
+        self.post(
             "",
             json={
                 "name": name,
@@ -71,10 +75,11 @@ class ProjectFactory(SDK):
                 "job_runner_name": job_runner_name,
             },
         )
+        return self(name)
 
     def list(self):
         """List existing projects."""
-        return self.request("GET", "")
+        return self.get("")
 
     def __call__(self, project_name: str):
         """Choose an existing project."""
@@ -87,4 +92,18 @@ class Project(SDK):
         self.name = name
 
     def get(self):
-        return self.request("GET", f"api/project/{self.name}")
+        return self.get(f"api/project/{self.name}")
+
+    def define_target(
+        self, query: str, key_field: str, ts_field: str, value_field: str
+    ):
+        return self.post(
+            "api/target",
+            json={
+                "project_name": self.name,
+                "query": query,
+                "key_field": key_field,
+                "ts_field": ts_field,
+                "value_field": value_field,
+            },
+        )

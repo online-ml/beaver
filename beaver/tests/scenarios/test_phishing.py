@@ -106,7 +106,7 @@ def test_phishing(
 ):
 
     # Create a project
-    sdk.project.create(
+    project = sdk.project.create(
         name="phishing_project",
         task="BINARY_CLASSIFICATION",
         message_bus_name="test_mb",
@@ -120,17 +120,12 @@ def test_phishing(
         message_bus.send(topic="phishing_project_features", key=i, value=x)
 
     # Create a target
-    response = client.post(
-        "/api/target",
-        json={
-            "project_name": "phishing_project",
-            "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_project_targets'",
-            "key_field": "key",
-            "ts_field": "created_at",
-            "target_field": "value",
-        },
+    project.define_target(
+        query="SELECT key, created_at, value FROM messages WHERE topic = 'phishing_project_targets'",
+        key_field="key",
+        ts_field="created_at",
+        value_field="value",
     )
-    assert response.status_code == 201
 
     # Create a feature set
     response = client.post(
@@ -141,7 +136,7 @@ def test_phishing(
             "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_project_features'",
             "key_field": "key",
             "ts_field": "created_at",
-            "features_field": "value",
+            "value_field": "value",
         },
     )
     assert response.status_code == 201

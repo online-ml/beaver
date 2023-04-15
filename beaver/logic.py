@@ -26,7 +26,7 @@ def iter_dataset_for_experiment(
         SELECT
             features.{experiment.feature_set.ts_field} AS ts,
             features.{experiment.feature_set.key_field} AS key,
-            features.{experiment.feature_set.features_field} AS features,
+            features.{experiment.feature_set.value_field} AS features,
             NULL as target
         FROM {experiment.feature_set.name} features
         WHERE key NOT IN (
@@ -45,7 +45,7 @@ def iter_dataset_for_experiment(
                 targets.{project.target.ts_field} AS ts,
                 targets.{project.target.key_field} AS key,
                 predictions.features,
-                targets.{project.target.target_field} as target
+                targets.{project.target.value_field} as target
             FROM {project.target_view_name} targets
             LEFT JOIN (
                 SELECT
@@ -123,7 +123,7 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
                 LEFT JOIN (
                     SELECT
                         {project.target.key_field} AS key,
-                        {project.target.target_field} = 'true' as y_true
+                        {project.target.value_field} = 'true' as y_true
                     FROM {project.target_view_name}
                 ) targets ON
                     targets.key = predictions.key
@@ -147,7 +147,7 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
             LEFT JOIN (
                 SELECT
                     {project.target.key_field} AS key,
-                    {project.target.target_field} as y_true
+                    {project.target.value_field} as y_true
                 FROM {project.target_view_name}
             ) targets ON
                 targets.key = predictions.key
