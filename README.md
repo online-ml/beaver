@@ -1,6 +1,6 @@
 <h1>Orac • MLOps for (online) machine learning</h1>
 
-**🚧 The purpose of Orac is to make launching and hosting an end-to-end online machine learning pipeline easy. It is the next generation of 'beaver' and part of the [online machine learning](https://github.com/online-ml) ecosystem. We have a first working sample [here](https://github.com/MaxHalford/taxi-demo-rp-mz-rv-rd-st) and more to come. 
+**🚧 The purpose of Orac is to make launching and hosting an end-to-end online machine learning pipeline easy. It is the next generation of 'beaver' and part of the [online machine learning](https://github.com/online-ml) ecosystem. We have a first working sample [here](https://github.com/MaxHalford/taxi-demo-rp-mz-rv-rd-st) and more to come.
 
 <div align="center" >
   <img src="https://user-images.githubusercontent.com/18452001/214675829-7ef3f6f4-a1dc-41a2-9ce2-7b8cca3eb6df.png" width="40%" align="right" />
@@ -27,23 +27,18 @@ Orac is...
 The easiest way is to run the provided [`docker-compose.yaml`](docker-compose.yaml) 🐳
 
 ```sh
-git clone git@github.com:OracLabs/orac.git
-cd orac
+git clone git@github.com:online-ml/beaver.git
+cd beaver
 docker-compose up
 ```
 
-Go to [http://localhost:3000](http://localhost:3000/) to check out the UI. This is a read-only interface. Interacting with the system happens through an API.
-
-Go to [http://localhost:8080/topics](http://localhost:8080/topics) to see all the kafka topics and their content easily as you run your models.
+Go to [http://localhost:8501/](http://localhost:8501/) to access the user interface.
 
 The recommended next step is to move on to the examples. That will give you an understanding of the workflow which Beaver enables.
 
 ## 👀 Examples
 
 - [🚕 Taxis](examples/taxis)
-
-## 📈 Dashboard
-Go to [http://localhost:4000/](http://localhost:4000/d/-GzUaVo4z/model-performance-dashboard-sample?orgId=1) to check out the sample Grafana Dashboard included for Taxi demo.
 
 ## 🚀 Deployment
 

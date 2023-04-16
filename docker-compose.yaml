@@ -88,13 +88,13 @@ services:
       - materialize
 
   api:
-    build: api
+    build: core
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
     ports:
       - 8000:8000
     volumes:
-      - ./api:/code
+      - ./core:/code
     command: >
       bash -c "
         python init_db.py &&
