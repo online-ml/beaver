@@ -120,7 +120,7 @@ def test_phishing(
         message_bus.send(topic="phishing_project_features", key=i, value=x)
 
     # Create a target
-    project.define_target(
+    project.target.set(
         query="SELECT key, created_at, value FROM messages WHERE topic = 'phishing_project_targets'",
         key_field="key",
         ts_field="created_at",
@@ -128,133 +128,76 @@ def test_phishing(
     )
 
     # Create a feature set
-    response = client.post(
-        "/api/feature-set",
-        json={
-            "name": "phishing_project_features",
-            "project_name": "phishing_project",
-            "query": "SELECT key, created_at, value FROM messages WHERE topic = 'phishing_project_features'",
-            "key_field": "key",
-            "ts_field": "created_at",
-            "value_field": "value",
-        },
+    project.feature_set.create(
+        name="phishing_project_features",
+        query="SELECT key, created_at, value FROM messages WHERE topic = 'phishing_project_features'",
+        key_field="key",
+        ts_field="created_at",
+        value_field="value",
     )
-    assert response.status_code == 201
 
     # Create an experiment
     model = preprocessing.StandardScaler() | linear_model.LogisticRegression()
-    model.learn = model.learn_one
-    model.predict = model.predict_one
-    response = client.post(
-        "/api/experiment",
-        json={
-            "name": "phishing_experiment_1",
-            "project_name": "phishing_project",
-            "feature_set_name": "phishing_project_features",
-            "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
-            "start_from_top": True,
-        },
+    exp1 = project.experiment.create(
+        name="phishing_experiment_1",
+        feature_set_name="phishing_project_features",
+        model=model,
+        start_from_top=True,
     )
-    assert response.status_code == 201
 
     # Create a second experiment
     model = preprocessing.StandardScaler() | linear_model.Perceptron()
-    model.learn = model.learn_one
-    model.predict = model.predict_one
-    response = client.post(
-        "/api/experiment",
-        json={
-            "name": "phishing_experiment_2",
-            "project_name": "phishing_project",
-            "feature_set_name": "phishing_project_features",
-            "model": base64.b64encode(dill.dumps(model)).decode("ascii"),
-            "start_from_top": True,
-        },
+    exp2 = project.experiment.create(
+        name="phishing_experiment_2",
+        feature_set_name="phishing_project_features",
+        model=model,
+        start_from_top=True,
     )
-    assert response.status_code == 201
 
     # Check predictions were made
-    response = client.get("/api/project/phishing_project").json()
-    assert response["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
-    assert response["experiments"]["phishing_experiment_1"]["n_learnings"] == 0
-    assert response["experiments"]["phishing_experiment_1"]["accuracy"] == 0
-    assert response["experiments"]["phishing_experiment_2"]["n_predictions"] == 10
-    assert response["experiments"]["phishing_experiment_2"]["n_learnings"] == 0
-    assert response["experiments"]["phishing_experiment_2"]["accuracy"] == 0
+    state = project.state()
+    assert state["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
+    assert state["experiments"]["phishing_experiment_1"]["n_learnings"] == 0
+    assert state["experiments"]["phishing_experiment_1"]["accuracy"] == 0
+    assert state["experiments"]["phishing_experiment_2"]["n_predictions"] == 10
+    assert state["experiments"]["phishing_experiment_2"]["n_learnings"] == 0
+    assert state["experiments"]["phishing_experiment_2"]["accuracy"] == 0
 
     # The first 10 samples were sent without labels -- send them in now
     for i, (_, y) in enumerate(datasets.Phishing().take(10)):
-        assert (
-            client.post(
-                "/api/message-bus/test_mb",
-                json={
-                    "topic": "phishing_project_targets",
-                    "key": str(i),
-                    "value": json.dumps(y),
-                },
-            ).status_code
-            == 201
-        )
+        message_bus.send(topic="phishing_project_targets", key=i, value=y)
 
     # We're using a synchronous task runner. Therefore, even though the labels have been sent, the
     # experiments are not automatically picking them up for learning. We have to explicitely make
     # them learn.
-    response = client.put("/api/experiment/phishing_experiment_1/start")
-    assert response.status_code == 200
-    response = client.put("/api/experiment/phishing_experiment_2/start")
-    assert response.status_code == 200
+    exp1.start()
+    exp2.start()
 
     # Check learning happened
-    response = client.get("/api/project/phishing_project").json()
-    assert response["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
-    assert response["experiments"]["phishing_experiment_1"]["n_learnings"] == 10
-    assert response["experiments"]["phishing_experiment_1"]["accuracy"] == 0.3
-    assert response["experiments"]["phishing_experiment_2"]["n_predictions"] == 10
-    assert response["experiments"]["phishing_experiment_2"]["n_learnings"] == 10
-    assert response["experiments"]["phishing_experiment_2"]["accuracy"] == 0.3
+    state = project.state()
+    assert state["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
+    assert state["experiments"]["phishing_experiment_1"]["n_learnings"] == 10
+    assert state["experiments"]["phishing_experiment_1"]["accuracy"] == 0.3
+    assert state["experiments"]["phishing_experiment_2"]["n_predictions"] == 10
+    assert state["experiments"]["phishing_experiment_2"]["n_learnings"] == 10
+    assert state["experiments"]["phishing_experiment_2"]["accuracy"] == 0.3
 
     # Send next 5 samples, with labels
     for i, (x, y) in enumerate(datasets.Phishing().take(15)):
         if i < 10:
             continue
-        assert (
-            client.post(
-                "/api/message-bus/test_mb",
-                json={
-                    "topic": "phishing_project_features",
-                    "key": str(i),
-                    "value": json.dumps(x),
-                },
-            ).status_code
-            == 201
-        )
-        assert (
-            client.post(
-                "/api/message-bus/test_mb",
-                json={
-                    "topic": "phishing_project_targets",
-                    "key": str(i),
-                    "value": json.dumps(y),
-                },
-            ).status_code
-            == 201
-        )
+        message_bus.send(topic="phishing_project_features", key=i, value=x)
+        message_bus.send(topic="phishing_project_targets", key=i, value=y)
 
     # Run the models
-    response = client.put("/api/experiment/phishing_experiment_1/start")
-    assert response.status_code == 200
-    response = client.put("/api/experiment/phishing_experiment_2/start")
-    assert response.status_code == 200
+    exp1.start()
+    exp2.start()
 
     # Check stats
-    response = client.get("/api/project/phishing_project").json()
-    assert response["experiments"]["phishing_experiment_1"]["n_predictions"] == 15
-    assert response["experiments"]["phishing_experiment_1"]["n_learnings"] == 15
-    assert (
-        round(response["experiments"]["phishing_experiment_1"]["accuracy"], 3) == 0.467
-    )
-    assert response["experiments"]["phishing_experiment_2"]["n_predictions"] == 15
-    assert response["experiments"]["phishing_experiment_2"]["n_learnings"] == 15
-    assert (
-        round(response["experiments"]["phishing_experiment_2"]["accuracy"], 3) == 0.533
-    )
+    state = project.state()
+    assert state["experiments"]["phishing_experiment_1"]["n_predictions"] == 15
+    assert state["experiments"]["phishing_experiment_1"]["n_learnings"] == 15
+    assert round(state["experiments"]["phishing_experiment_1"]["accuracy"], 3) == 0.467
+    assert state["experiments"]["phishing_experiment_2"]["n_predictions"] == 15
+    assert state["experiments"]["phishing_experiment_2"]["n_learnings"] == 15
+    assert round(state["experiments"]["phishing_experiment_2"]["accuracy"], 3) == 0.533
