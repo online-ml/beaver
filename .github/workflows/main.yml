@@ -19,20 +19,18 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.11
-          cache: 'poetry'
+          cache: "poetry"
       - name: Install pre-commit
         run: poetry add pre-commit
-        working-directory: api
       - name: Run pre-commit
         run: poetry run pre-commit run --all-files
-        working-directory: api
 
   test:
     needs: code-quality
     strategy:
       fail-fast: false
       matrix:
-        python: [ "3.10", "3.11" ]
+        python: ["3.10", "3.11"]
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -49,7 +47,6 @@ jobs:
 
       - name: Configure poetry
         run: poetry config virtualenvs.in-project true
-        working-directory: api
 
       - name: Cache the virtualenv
         uses: actions/cache@v3
@@ -61,12 +58,9 @@ jobs:
       - name: Install dependencies
         if: ${{ steps.cached-venv.outputs.cache-hit != 'true' }}
         run: poetry install --no-interaction --no-root
-        working-directory: api
 
       - name: Install library
         run: poetry install --no-interaction
-        working-directory: api
 
       - name: Run pytest
         run: poetry run pytest -n logical
-        working-directory: api
