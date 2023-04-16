@@ -48,6 +48,9 @@ addopts = [
     "--color=yes",
 ]
 doctest_optionflags = "NORMALIZE_WHITESPACE NUMBER ELLIPSIS"
+norecursedirs = [
+    "ui"
+]
 
 [build-system]
 requires = ["poetry-core"]
