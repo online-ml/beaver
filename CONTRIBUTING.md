@@ -26,7 +26,7 @@ poetry run curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # install requirements, this will also create virtualenv
 poetry install
-poetry install --group sdk
+poetry install --with sdk
 
 # to see where dependencies have been installed run
 poetry env info

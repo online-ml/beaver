@@ -5,8 +5,7 @@ WORKDIR /code
 RUN pip3 install poetry
 
 COPY pyproject.toml poetry.lock ./
+COPY sdk ./sdk
 RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+RUN poetry install --with ui
 RUN pip install river
-
-COPY . /code

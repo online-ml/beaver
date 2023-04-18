@@ -1,4 +1,4 @@
-# Taxi trips example
+# Forecasting taxi trip durations
 
 Simulating real traffic using the [*New York City Taxi Trip Duration* dataset](https://www.kaggle.com/c/nyc-taxi-trip-duration) 🚕
 

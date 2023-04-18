@@ -11,3 +11,5 @@
 *.pyc
 *.sqlite
 dist
+
+dashboard/grafana_volume/

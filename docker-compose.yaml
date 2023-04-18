@@ -60,7 +60,6 @@ services:
     depends_on:
       - redpanda
 
-
   materialize:
     image: materialize/materialized:v0.12.0
     container_name: materialize
@@ -76,46 +75,45 @@ services:
     ports:
       - 6379:6379
 
-  celery:
-    build: api
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
-    command: celery -A api.experiments worker -c 6  # specify max number of tasks. temp solution to how many experiments can be run at the same time
-    depends_on:
-      - redis
-      - postgres
-      - redpanda
-      - materialize
+  rq-dashboard:
+    image: jaredv/rq-docker:0.0.2
+    command: rq-dashboard -H redis
+    ports:
+      - 9181:9181
+
+  rq-worker:
+    image: jaredv/rq-docker:0.0.2
+    command: rq worker -u redis://redis:6379 high normal low
+    deploy:
+      replicas: 3
 
   api:
-    build: core
+    build: .
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
     ports:
       - 8000:8000
     volumes:
-      - ./core:/code
+      - ./:/code
     command: >
       bash -c "
-        python init_db.py &&
-        uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /code
+        uvicorn beaver.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /code
       "
     depends_on:
       - postgres
       - redpanda
       - materialize
-      - celery
+      - rq-worker
 
   ui:
-    build: ui
+    build: .
+    environment:
+      BEAVER_API_HOST: http://localhost:8000
+    ports:
+      - 8501:8501
     volumes:
       - ./ui:/code
-      - node_modules:/code/node_modules
-    environment:
-      HOST: 0.0.0.0
-    command: yarn run dev
-    ports:
-      - 3000:3000
+    command: streamlit run Home.py
     depends_on:
       - api
 
@@ -146,4 +144,3 @@ services:
 
 volumes:
   postgres:
-  node_modules:
