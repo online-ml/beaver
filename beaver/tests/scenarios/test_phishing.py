@@ -93,12 +93,12 @@ def create_job_runner(client: TestClient, sqlite_mb_path: pathlib.Path):
 
     # Create source
     response = client.post(
-        "/api/task-runner",
+        "/api/job-runner",
         json={"name": "test_tr", "protocol": "SYNCHRONOUS"},
     )
     assert response.status_code == 201
-    assert len(client.get("/api/task-runner/").json()) == 1
-    assert client.get("/api/task-runner/test_tr").json()["protocol"] == "SYNCHRONOUS"
+    assert len(client.get("/api/job-runner/").json()) == 1
+    assert client.get("/api/job-runner/test_tr").json()["protocol"] == "SYNCHRONOUS"
 
 
 def test_phishing(

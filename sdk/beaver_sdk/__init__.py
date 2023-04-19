@@ -42,8 +42,38 @@ class Instance:
         """Access projects."""
         return ProjectFactory(self.host)
 
-    def message_bus(self, name: str):
-        return MessageBus(host=self.host, name=name)
+    @property
+    def message_bus(self):
+        return MessageBusFactory(host=self.host)
+
+    @property
+    def stream_processor(self):
+        return StreamProcessorFactory(host=self.host)
+
+    @property
+    def job_runner(self):
+        return JobRunnerFactory(host=self.host)
+
+
+class MessageBusFactory(SDK):
+    def __init__(self, host):
+        super().__init__(host=urllib.parse.urljoin(host, "/api/message-bus/"))
+
+    def create(self, name: str, protocol: str, url: str):
+        """Create a message bus."""
+        self.post(
+            "",
+            json={"name": name, "protocol": protocol, "url": url},
+        )
+        return self(name)
+
+    def list(self):
+        """List existing message buses."""
+        return self.get("")
+
+    def __call__(self, message_bus_name: str):
+        """Choose an existing message bus."""
+        return MessageBus(host=self.host, name=message_bus_name)
 
 
 class MessageBus(SDK):
@@ -58,9 +88,65 @@ class MessageBus(SDK):
         )
 
 
+class StreamProcessorFactory(SDK):
+    def __init__(self, host):
+        super().__init__(host=urllib.parse.urljoin(host, "/api/stream-processor/"))
+
+    def create(self, name: str, protocol: str, url: str):
+        """Create a stream processor."""
+        self.post(
+            "",
+            json={"name": name, "protocol": protocol, "url": url},
+        )
+        return self(name)
+
+    def list(self):
+        """List existing stream processors."""
+        return self.get("")
+
+    def __call__(self, stream_processor_name: str):
+        """Choose an existing stream processor."""
+        return StreamProcessor(host=self.host, name=stream_processor_name)
+
+
+class StreamProcessor(SDK):
+    def __init__(self, host, name):
+        super().__init__(
+            host=urllib.parse.urljoin(host, f"/api/stream-processor/{name}")
+        )
+        self.name = name
+
+
+class JobRunnerFactory(SDK):
+    def __init__(self, host):
+        super().__init__(host=urllib.parse.urljoin(host, "/api/job-runner/"))
+
+    def create(self, name: str, protocol: str, url: str | None = None):
+        """Create a job runner."""
+        self.post(
+            "",
+            json={"name": name, "protocol": protocol, "url": url},
+        )
+        return self(name)
+
+    def list(self):
+        """List existing job runners."""
+        return self.get("")
+
+    def __call__(self, job_runner_name: str):
+        """Choose an existing job runner."""
+        return JobRunner(host=self.host, name=job_runner_name)
+
+
+class JobRunner(SDK):
+    def __init__(self, host, name):
+        super().__init__(host=urllib.parse.urljoin(host, f"/api/job-runner/{name}"))
+        self.name = name
+
+
 class ProjectFactory(SDK):
     def __init__(self, host):
-        super().__init__(host=urllib.parse.urljoin(host, "/api/project"))
+        super().__init__(host=urllib.parse.urljoin(host, "/api/project/"))
 
     def create(
         self,

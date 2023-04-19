@@ -1,12 +1,20 @@
 import contextlib
 import os
 import sqlmodel as sqlm
+import sqlmodel.pool
 
 
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite://")
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = sqlm.create_engine(DATABASE_URL, connect_args=connect_args)
+connect_args = (
+    {
+        "connect_args": {"check_same_thread": False},
+        "poolclass": sqlmodel.pool.StaticPool,
+    }
+    if DATABASE_URL.startswith("sqlite")
+    else {}
+)
+engine = sqlm.create_engine(DATABASE_URL, **connect_args)
 
 
 def create_db_and_tables():

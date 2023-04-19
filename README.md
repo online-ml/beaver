@@ -37,6 +37,7 @@ This is all you need to run Beaver. Check out the examples to see how to use it.
 ## 👀 Examples
 
 - [🚕 Taxis](examples/taxis)
+- [🌳 Batch gradient boosting vs. random forest](examples/batch-trees)
 
 ## 🚀 Deployment
 

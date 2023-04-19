@@ -2,8 +2,6 @@
 
 ## Setup
 
-### 🐍 Python environment
-
 Regardless of how you develop, you need a Python environment to run pre-commit hooks.
 
 ```sh
@@ -36,7 +34,7 @@ poetry run pre-commit install
 
 ```
 
-## 🐍 Developping with Python
+### 🐍 Developping with Python
 
 Once that's done, you just have to activate the environment.
 
@@ -54,6 +52,13 @@ And also run unit tests.
 
 ```sh
 pytest
+```
+
+And also run the web interface.
+
+```sh
+export BEAVER_API_HOST=http://localhost:8000
+streamlit run ui/Home.py
 ```
 
 
@@ -81,32 +86,25 @@ docker compose down
 docker compose down --rmi all -v --remove-orphans
 ```
 
-## Adding infrastructure
+## Handbook
 
-### Message bus
+### Contributing infrastructure
+
+#### Message bus
 
 - Add attribute to `enums/MessageBus`
 - Add class to `infra/message_bus.py`
 - Add `if` condition to `models/MessageBus.infra`
 
-### Stream processor
+#### Stream processor
 
 - Add attribute to `enums.MessageBus`
 - Add class to `infra/stream_processor.py`
 - Add `if` condition to `models/MessageBus.infra`
 - Add iteration and performance logic to `core/logic.py`
 
-### Job runner
+#### Job runner
 
 - Add attribute to `enums/JobRunner`
 - Add class to `infra/job_runner.py`
 - Add `if` condition to `models/JobRunner.infra`
-
-## User interface
-
-The user interface is static. It's only purpose is to display information. It's not meant to be interactive. Interaction happens through the API and/or the Python SDK.
-
-```sh
-export BEAVER_API_HOST=http://localhost:8000
-streamlit run ui/Home.py
-```
