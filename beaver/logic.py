@@ -38,7 +38,7 @@ def iter_dataset_for_experiment(
         """
 
         # Labelled samples to learn on
-        if project.target is not None:
+        if project.target is not None and experiment.can_learn:
             query += f""" UNION ALL
 
             SELECT
@@ -82,6 +82,98 @@ def iter_dataset_for_experiment(
             name=dataset_name, since=since
         )
     )
+
+
+def do_progressive_learning(experiment_name: str):
+    """
+
+    Progressive learning is the act of intervealing predictions and learning. It is specific to
+    online learning. This function first lists all the events that occurred since the last time
+    checkpoint. These events constitute a chunk. The events are looped over, and the model does
+    predictions and learns accordingly.
+
+    Here's an example with three chunks:
+
+    ```
+    t1 k1 x1 --  =>  predict(x1) outputs p1
+    t2 k2 x2 --  =>  predict(x2) outputs p2
+
+    t3 k1 -- y1  =>  learn(x1, y1)
+    t4 k3 x3 --  =>  predict(x3) outputs p3
+    t5 k3 -- y3  =>  learn(x3, y3)
+
+    t6 k2 -- y2  =>  learn(x2, y2)
+    ```
+
+    Each chunk is built and streamed thanks to iter_dataset_for_experiment.
+
+    The idea is that this functions is run in the background repeatidly. This way, the models stay
+    up-to-date, and predictions are made as soon as possible.
+
+    """
+
+    with db.session() as session:
+        experiment = session.get(models.Experiment, experiment_name)
+        project = experiment.project
+        message_bus = project.message_bus
+        model = experiment.get_model()
+        feature_set = experiment.feature_set
+
+    job = models.Job(experiment=experiment)
+
+    # If this experiment has already done a prediction or a learning, then last_sample_ts will be
+    # set. If not, then refer to the start_from_top parameter.
+    since = experiment.last_sample_ts or (
+        dt.datetime.min if experiment.start_from_top else experiment.created_at
+    )
+
+    # When the model learns, it uses the same features that were used for making a prediction. This
+    # is by design, to prevent leakage. However, if a prediction has not been made yet, then labels
+    # won't be accompanied with the relevant features. Therefore, we keep them in memory so they
+    # can be used for learning.
+    features_used_for_predicting: dict[str, dict] = {}
+
+    for ts, key, features, label in iter_dataset_for_experiment(
+        experiment_name=experiment.name, since=since
+    ):
+        # LEARNING
+        if label is not None:
+            model.learn(features or features_used_for_predicting[key], label)
+            job.n_learnings += 1
+        # PREDICTING
+        else:
+            y_pred = model.predict(features)
+
+            # Cast to appropriate type
+            if project.task == enums.Task.binary_clf.value:
+                y_pred = bool(y_pred)
+
+            message_bus.infra.send(
+                infra.Message(
+                    topic=project.predictions_topic_name,
+                    key=str(uuid.uuid4()),
+                    value=json.dumps(
+                        {
+                            "key": key,
+                            "project": project.name,
+                            "experiment": experiment.name,
+                            "prediction": json.dumps(y_pred),
+                            "features": json.dumps(features),
+                        }
+                    ),
+                )
+            )
+            job.n_predictions += 1
+            features_used_for_predicting[key] = features
+        # Bookkeeping
+        experiment.last_sample_ts = ts
+
+    with db.session() as session:
+        experiment.set_model(model)
+        session.add(experiment)
+        session.add(job)
+        session.commit()
+        session.refresh(experiment)
 
 
 def get_experiment_performance_for_project(project_name: str) -> dict:
@@ -169,94 +261,6 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
         r.pop("experiment"): r
         for r in project.stream_processor.infra.stream_view(name=performance_view_name)
     }
-
-
-def do_progressive_learning(experiment_name: str):
-    """
-
-    Progressive learning is the act of intervealing predictions and learning. It is specific to
-    online learning. This function first lists all the events that occurred since the last time
-    checkpoint. These events constitute a chunk. The events are looped over, and the model does
-    predictions and learns accordingly.
-
-    Here's an example with three chunks:
-
-    ```
-    t1 k1 x1 --  =>  predict(x1) outputs p1
-    t2 k2 x2 --  =>  predict(x2) outputs p2
-
-    t3 k1 -- y1  =>  learn(x1, y1)
-    t4 k3 x3 --  =>  predict(x3) outputs p3
-    t5 k3 -- y3  =>  learn(x3, y3)
-
-    t6 k2 -- y2  =>  learn(x2, y2)
-    ```
-
-    Each chunk is built and streamed thanks to iter_dataset_for_experiment.
-
-    The idea is that this functions is run in the background repeatidly. This way, the models stay
-    up-to-date, and predictions are made as soon as possible.
-
-    """
-
-    with db.session() as session:
-        experiment = session.get(models.Experiment, experiment_name)
-        project = experiment.project
-        message_bus = project.message_bus
-        model = experiment.get_model()
-        feature_set = experiment.feature_set
-
-    job = models.Job(experiment=experiment)
-
-    # If this experiment has already done a prediction or a learning, then last_sample_ts will be
-    # set. If not, then refer to the start_from_top parameter.
-    since = experiment.last_sample_ts or (
-        dt.datetime.min if experiment.start_from_top else experiment.created_at
-    )
-
-    # When the model learns, it uses the same features that were used for making a prediction. This
-    # is by design, to prevent leakage. However, if a prediction has not been made yet, then labels
-    # won't be accompanied with the relevant features. Therefore, we keep them in memory so they
-    # can be used for learning.
-    features_used_for_predicting: dict[str, dict] = {}
-
-    for ts, key, features, label in iter_dataset_for_experiment(
-        experiment_name=experiment.name,
-        since=experiment.last_sample_ts or experiment.created_at,
-    ):
-        # LEARNING
-        if label is not None:
-            model.learn(features or features_used_for_predicting[key], label)
-            job.n_learnings += 1
-        # PREDICTING
-        else:
-            y_pred = model.predict(features)
-            message_bus.infra.send(
-                infra.Message(
-                    topic=project.predictions_topic_name,
-                    key=str(uuid.uuid4()),
-                    value=json.dumps(
-                        {
-                            "key": key,
-                            "project": project.name,
-                            "experiment": experiment.name,
-                            "prediction": json.dumps(y_pred),
-                            "features": json.dumps(features),
-                        }
-                    ),
-                )
-            )
-            job.n_predictions += 1
-            features_used_for_predicting[key] = features
-        # Bookkeeping
-        experiment.last_sample_ts = ts
-
-    with db.session() as session:
-        experiment.set_model(model)
-        session.add(experiment)
-        session.add(job)
-        session.commit()
-        session.refresh(experiment)
 
 
 def monitor_experiments(project_name: str):

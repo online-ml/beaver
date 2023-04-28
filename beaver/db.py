@@ -31,11 +31,13 @@ def session():
     # HACK
     from beaver.main import app
 
+    session = None
     try:
         session = next(app.dependency_overrides[get_session]())
         yield session
     except KeyError:
-        session = next(db.get_session())
+        session = next(get_session())
         yield session
     finally:
-        session.close()
+        if session is not None:
+            session.close()

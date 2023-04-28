@@ -11,6 +11,7 @@ class Experiment(Base, table=True):  # type: ignore[call-arg]
     # Attributes
     name: str = sqlmodel.Field(primary_key=True)
     model: bytes
+    can_learn: bool = sqlmodel.Field(default=False)
     model_state: bytes | None = sqlmodel.Field(default=None)
     sync_seconds: int = sqlmodel.Field(default=20)
     start_from_top: bool = sqlmodel.Field(default=False)

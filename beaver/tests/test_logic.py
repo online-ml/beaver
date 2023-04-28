@@ -132,6 +132,7 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
         project_name=project.name,
         model="doesn't matter",
         feature_set_name=feature_set.name,
+        can_learn=True,
     )
     experiment.save(session)
 

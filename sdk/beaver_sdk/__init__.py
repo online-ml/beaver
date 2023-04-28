@@ -5,6 +5,8 @@ import json
 import urllib.parse
 import requests
 import river.base
+import sklearn.base
+import types
 
 
 class SDK:
@@ -56,20 +58,17 @@ class Instance:
 
 
 class MessageBusFactory(SDK):
-    def __init__(self, host):
-        super().__init__(host=urllib.parse.urljoin(host, "/api/message-bus/"))
-
     def create(self, name: str, protocol: str, url: str):
         """Create a message bus."""
         self.post(
-            "",
+            "/api/message-bus/",
             json={"name": name, "protocol": protocol, "url": url},
         )
         return self(name)
 
     def list(self):
         """List existing message buses."""
-        return self.get("")
+        return self.get("/api/message-bus/")
 
     def __call__(self, message_bus_name: str):
         """Choose an existing message bus."""
@@ -78,31 +77,28 @@ class MessageBusFactory(SDK):
 
 class MessageBus(SDK):
     def __init__(self, host, name):
-        super().__init__(host=urllib.parse.urljoin(host, f"/api/message-bus/{name}"))
+        super().__init__(host)
         self.name = name
 
     def send(self, topic, key, value):
         self.post(
-            "",
+            f"/api/message-bus/{self.name}",
             json={"topic": topic, "key": str(key), "value": json.dumps(value)},
         )
 
 
 class StreamProcessorFactory(SDK):
-    def __init__(self, host):
-        super().__init__(host=urllib.parse.urljoin(host, "/api/stream-processor/"))
-
     def create(self, name: str, protocol: str, url: str):
         """Create a stream processor."""
         self.post(
-            "",
+            "/api/stream-processor/",
             json={"name": name, "protocol": protocol, "url": url},
         )
         return self(name)
 
     def list(self):
         """List existing stream processors."""
-        return self.get("")
+        return self.get("/api/stream-processor/")
 
     def __call__(self, stream_processor_name: str):
         """Choose an existing stream processor."""
@@ -111,27 +107,22 @@ class StreamProcessorFactory(SDK):
 
 class StreamProcessor(SDK):
     def __init__(self, host, name):
-        super().__init__(
-            host=urllib.parse.urljoin(host, f"/api/stream-processor/{name}")
-        )
+        super().__init__(host)
         self.name = name
 
 
 class JobRunnerFactory(SDK):
-    def __init__(self, host):
-        super().__init__(host=urllib.parse.urljoin(host, "/api/job-runner/"))
-
     def create(self, name: str, protocol: str, url: str | None = None):
         """Create a job runner."""
         self.post(
-            "",
+            "/api/job-runner/",
             json={"name": name, "protocol": protocol, "url": url},
         )
         return self(name)
 
     def list(self):
         """List existing job runners."""
-        return self.get("")
+        return self.get("/api/job-runner/")
 
     def __call__(self, job_runner_name: str):
         """Choose an existing job runner."""
@@ -140,14 +131,11 @@ class JobRunnerFactory(SDK):
 
 class JobRunner(SDK):
     def __init__(self, host, name):
-        super().__init__(host=urllib.parse.urljoin(host, f"/api/job-runner/{name}"))
+        super().__init__(host)
         self.name = name
 
 
 class ProjectFactory(SDK):
-    def __init__(self, host):
-        super().__init__(host=urllib.parse.urljoin(host, "/api/project/"))
-
     def create(
         self,
         name: str,
@@ -158,7 +146,7 @@ class ProjectFactory(SDK):
     ):
         """Create a project."""
         self.post(
-            "",
+            "/api/project/",
             json={
                 "name": name,
                 "task": task,
@@ -171,7 +159,7 @@ class ProjectFactory(SDK):
 
     def list(self):
         """List existing projects."""
-        return self.get("")
+        return self.get("/api/project/")
 
     def __call__(self, project_name: str):
         """Choose an existing project."""
@@ -180,15 +168,15 @@ class ProjectFactory(SDK):
 
 class Project(SDK):
     def __init__(self, host, name):
-        super().__init__(host="")
+        super().__init__(host=host)
         self.name = name
 
     def state(self):
-        return self.get(f"api/project/{self.name}").json()
+        return self.get(f"/api/project/{self.name}")
 
     def set_target(self, query: str, key_field: str, ts_field: str, value_field: str):
         return self.post(
-            "api/target",
+            "/api/target/",
             json={
                 "project_name": self.name,
                 "query": query,
@@ -213,13 +201,13 @@ class Project(SDK):
 
 class TargetFactory(SDK):
     def __init__(self, host, project_name: str):
-        super().__init__(host=urllib.parse.urljoin(host, "/api/target"))
+        super().__init__(host)
         self.project_name = project_name
 
     def set(self, query: str, key_field: str, ts_field: str, value_field: str):
         """Define a project's target."""
         self.post(
-            "",
+            "/api/target/",
             json={
                 "project_name": self.project_name,
                 "query": query,
@@ -232,7 +220,7 @@ class TargetFactory(SDK):
 
 class FeatureSetFactory(SDK):
     def __init__(self, host, project_name: str):
-        super().__init__(host=urllib.parse.urljoin(host, "/api/feature-set"))
+        super().__init__(host)
         self.project_name = project_name
 
     def create(
@@ -240,7 +228,7 @@ class FeatureSetFactory(SDK):
     ):
         """Create a feature set."""
         self.post(
-            "",
+            "/api/feature-set/",
             json={
                 "name": name,
                 "project_name": self.project_name,
@@ -252,9 +240,13 @@ class FeatureSetFactory(SDK):
         )
 
 
+def sklearn_predict(model, x):
+    return model._predict([list(x.values())])[0]
+
+
 class ExperimentFactory(SDK):
     def __init__(self, host, project_name: str):
-        super().__init__(host=urllib.parse.urljoin(host, "/api/experiment"))
+        super().__init__(host)
         self.project_name = project_name
 
     def create(
@@ -270,9 +262,12 @@ class ExperimentFactory(SDK):
         if isinstance(model, river.base.Estimator):
             model.learn = model.learn_one
             model.predict = model.predict_one
+        elif isinstance(model, sklearn.base.BaseEstimator):
+            model._predict = model.predict
+            model.predict = types.MethodType(sklearn_predict, model)
 
         self.post(
-            "",
+            "/api/experiment/",
             json={
                 "name": name,
                 "project_name": self.project_name,
@@ -291,8 +286,8 @@ class ExperimentFactory(SDK):
 
 class Experiment(SDK):
     def __init__(self, host, name):
-        super().__init__(host="")
+        super().__init__(host)
         self.name = name
 
     def start(self):
-        self.put(f"api/experiment/{self.name}/start")
+        self.put(f"/api/experiment/{self.name}/start")

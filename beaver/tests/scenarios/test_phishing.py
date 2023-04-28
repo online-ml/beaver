@@ -31,17 +31,18 @@ def session_fixture():
 
 @pytest.fixture()
 def client(session: sqlmodel.Session):
+    """HACK: this is an override so that the Beaver SDK talks to the TestClient, instead of requests"""
+
     def get_session_override():
         yield session
 
     def request_override(*args, **kwargs):
-        # This is a hack so that the Beaver SDK talks to the TestClient, instead of requests
         self, *args = args
         method, endpoint, *args = args
         endpoint = urllib.parse.urljoin(self.host, endpoint)
         r = client.request(method, endpoint, *args, **kwargs)
         r.raise_for_status()
-        return r
+        return r.json()
 
     app.dependency_overrides[get_session] = get_session_override
     client = TestClient(app)
@@ -51,7 +52,7 @@ def client(session: sqlmodel.Session):
 
 
 @pytest.fixture()
-def sdk():
+def sdk(client):
     return beaver_sdk.Instance(host="")
 
 
@@ -62,48 +63,13 @@ def sqlite_mb_path():
     (here / "message_bus.db").unlink(missing_ok=True)
 
 
-@pytest.fixture()
-def create_message_bus(client: TestClient, sqlite_mb_path: pathlib.Path):
+def test_phishing(sdk, sqlite_mb_path):
 
-    # Create source
-    response = client.post(
-        "/api/message-bus",
-        json={"name": "test_mb", "protocol": "SQLITE", "url": str(sqlite_mb_path)},
+    sdk.message_bus.create(name="test_mb", protocol="SQLITE", url=str(sqlite_mb_path))
+    sdk.stream_processor.create(
+        name="test_sp", protocol="SQLITE", url=str(sqlite_mb_path)
     )
-    assert response.status_code == 201
-    assert len(client.get("/api/message-bus/").json()) == 1
-    assert client.get("/api/message-bus/test_mb").json()["protocol"] == "SQLITE"
-
-
-@pytest.fixture()
-def create_stream_processor(client: TestClient, sqlite_mb_path: pathlib.Path):
-
-    # Create source
-    response = client.post(
-        "/api/stream-processor",
-        json={"name": "test_sp", "protocol": "SQLITE", "url": str(sqlite_mb_path)},
-    )
-    assert response.status_code == 201
-    assert len(client.get("/api/stream-processor/").json()) == 1
-    assert client.get("/api/stream-processor/test_sp").json()["protocol"] == "SQLITE"
-
-
-@pytest.fixture()
-def create_job_runner(client: TestClient, sqlite_mb_path: pathlib.Path):
-
-    # Create source
-    response = client.post(
-        "/api/job-runner",
-        json={"name": "test_tr", "protocol": "SYNCHRONOUS"},
-    )
-    assert response.status_code == 201
-    assert len(client.get("/api/job-runner/").json()) == 1
-    assert client.get("/api/job-runner/test_tr").json()["protocol"] == "SYNCHRONOUS"
-
-
-def test_phishing(
-    create_message_bus, create_stream_processor, create_job_runner, client, sdk
-):
+    sdk.job_runner.create(name="test_tr", protocol="SYNCHRONOUS")
 
     # Create a project
     project = sdk.project.create(

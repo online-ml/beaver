@@ -1,6 +1,9 @@
 import streamlit as st
 
 
+# projects =
+
+
 project = st.sidebar.radio("Project", ["Phishing", "Taxis"])
 
 st.title(project)

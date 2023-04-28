@@ -18,6 +18,12 @@ class Model(typing.Protocol):
     def predict(self, x: dict) -> typing.Any:
         ...
 
+
+@typing.runtime_checkable
+class ModelThatCanLearn(typing.Protocol):
+    def predict(self, x: dict) -> typing.Any:
+        ...
+
     def learn(self, x: dict, y: typing.Any) -> None:
         ...
 
@@ -46,6 +52,8 @@ def create_experiment(
         raise fastapi.HTTPException(
             status_code=400, detail="Model does not implement the expected protocol"
         )
+
+    experiment.can_learn = isinstance(model_obj, ModelThatCanLearn)
     experiment.model_state = dill.dumps(model_obj)
     experiment.save(session)
 
