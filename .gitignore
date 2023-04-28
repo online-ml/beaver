@@ -1,15 +1,10 @@
-# pyenv
 .python-version
-
-# IDE
 .vscode
 .idea
-
-# Notebook
 /*.ipynb
 .ipynb_checkpoints
 *.pyc
 *.sqlite
 dist
-
+*.db
 dashboard/grafana_volume/
