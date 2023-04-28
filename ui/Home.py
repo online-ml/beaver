@@ -1,15 +1,18 @@
 import os
 import streamlit as st
-from beaver_sdk import Project
+import beaver_sdk
 
 BEAVER_API_HOST = os.environ["BEAVER_API_HOST"]
+BEAVER_SDK = beaver_sdk.Instance(BEAVER_API_HOST)
 
-st.set_page_config(layout="wide", page_icon="🦫", page_title="Beaver")
-st.title("Beaver")
+if __name__ == "__main__":
 
-st.markdown(
-    f"""
-    - **API is running at {BEAVER_API_HOST}**
-    - [**API documentation**]({BEAVER_API_HOST}/docs)
-"""
-)
+    st.set_page_config(layout="wide", page_icon="🦫", page_title="Beaver")
+    st.title("Beaver")
+
+    st.markdown(
+        f"""
+        - **API is running at {BEAVER_API_HOST}**
+        - [**API documentation**]({BEAVER_API_HOST}/docs)
+    """
+    )

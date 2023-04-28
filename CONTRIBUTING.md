@@ -45,7 +45,7 @@ poetry shell
 Now you can run the server.
 
 ```sh
-uvicorn beaver.main:app --port 8000 --reload
+uvicorn beaver.main:app --port 8000 --reload --reload-dir beaver
 ```
 
 And also run unit tests.
