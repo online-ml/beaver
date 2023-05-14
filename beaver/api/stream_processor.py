@@ -37,3 +37,34 @@ def read_stream_processor(
             status_code=404, detail="Stream processor not found"
         )
     return stream_processor
+
+
+@router.delete("/{name}", status_code=204)
+def delete_stream_processor(
+    name: str,
+    session: sqlm.Session = fastapi.Depends(db.get_session),
+):
+    stream_processor = session.get(models.StreamProcessor, name)
+    if not stream_processor:
+        raise fastapi.HTTPException(
+            status_code=404, detail="Stream processor not found"
+        )
+    stream_processor.delete(session)
+
+
+class OneOffQuery(sqlm.SQLModel):
+    query: str
+
+
+@router.post("/{name}")
+def execute_query(
+    name: str,
+    query: OneOffQuery,
+    session: sqlm.Session = fastapi.Depends(db.get_session),
+):
+    stream_processor = session.get(models.StreamProcessor, name)
+    if not stream_processor:
+        raise fastapi.HTTPException(
+            status_code=404, detail="Stream processor not found"
+        )
+    stream_processor.infra.execute(query.query)

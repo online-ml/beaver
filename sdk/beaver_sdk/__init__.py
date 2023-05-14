@@ -23,7 +23,7 @@ class SDK:
             method=method, url=urllib.parse.urljoin(self.host, endpoint), **kwargs
         )
         r.raise_for_status()
-        return r.json() if as_json else r
+        return r.json() if as_json and r.headers.get('content-type') == 'application/json' else r
 
     def get(self, endpoint, **kwargs):
         return self.request("GET", endpoint, **kwargs)
@@ -86,6 +86,9 @@ class MessageBus(SDK):
             json={"topic": topic, "key": str(key), "value": json.dumps(value)},
         )
 
+    def delete(self):
+        return self.request("DELETE", f"/api/message-bus/{self.name}", as_json=False)
+
 
 class StreamProcessorFactory(SDK):
     def create(self, name: str, protocol: str, url: str):
@@ -110,6 +113,16 @@ class StreamProcessor(SDK):
         super().__init__(host)
         self.name = name
 
+    def execute(self, query: str):
+        self.post(
+            f"/api/stream-processor/{self.name}",
+            json={"query": query}
+        )
+
+    def delete(self):
+        return self.request("DELETE", f"/api/stream-processor/{self.name}", as_json=False)
+
+
 
 class JobRunnerFactory(SDK):
     def create(self, name: str, protocol: str, url: str | None = None):
@@ -133,6 +146,9 @@ class JobRunner(SDK):
     def __init__(self, host, name):
         super().__init__(host)
         self.name = name
+
+    def delete(self):
+        return self.request("DELETE", f"/api/job-runner/{self.name}", as_json=False)
 
 
 class ProjectFactory(SDK):
@@ -171,20 +187,26 @@ class Project(SDK):
         super().__init__(host=host)
         self.name = name
 
+    def delete(self):
+        return self.request("DELETE", f"/api/project/{self.name}", as_json=False)
+
     def state(self):
         return self.get(f"/api/project/{self.name}")
 
-    def set_target(self, query: str, key_field: str, ts_field: str, value_field: str):
-        return self.post(
-            "/api/target/",
-            json={
-                "project_name": self.name,
-                "query": query,
-                "key_field": key_field,
-                "ts_field": ts_field,
-                "value_field": value_field,
-            },
-        )
+    @property
+    def message_bus(self):
+        message_bus_name = self.state()["message_bus_name"]
+        return MessageBusFactory(host=self.host)(message_bus_name)
+
+    @property
+    def stream_processor(self):
+        stream_processor_name = self.state()["stream_processor_name"]
+        return StreamProcessorFactory(host=self.host)(stream_processor_name)
+
+    @property
+    def job_runner(self):
+        job_runner_name = self.state()["job_runner_name"]
+        return JobRunnerFactory(host=self.host)(job_runner_name)
 
     @property
     def feature_set(self):
@@ -217,6 +239,9 @@ class TargetFactory(SDK):
             },
         )
 
+    def delete(self):
+        return self.request("DELETE", f"/api/target/{self.project_name}", as_json=False)
+
 
 class FeatureSetFactory(SDK):
     def __init__(self, host, project_name: str):
@@ -238,6 +263,20 @@ class FeatureSetFactory(SDK):
                 "value_field": value_field,
             },
         )
+
+    def __call__(self, feature_set_name: str):
+        """Choose an existing feature set."""
+        return FeatureSet(host=self.host, name=feature_set_name)
+
+
+class FeatureSet(SDK):
+
+    def __init__(self, host, name: str):
+        super().__init__(host)
+        self.name = name
+
+    def delete(self):
+        return self.request("DELETE", f"/api/feature-set/{self.name}", as_json=False)
 
 
 def sklearn_predict(model, x):
@@ -291,3 +330,6 @@ class Experiment(SDK):
 
     def start(self):
         self.put(f"/api/experiment/{self.name}/start")
+
+    def delete(self):
+        return self.request("DELETE", f"/api/experiment/{self.name}", as_json=False)

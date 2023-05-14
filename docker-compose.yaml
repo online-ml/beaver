@@ -68,7 +68,7 @@ services:
       - 6875:6875
 
   redis:
-    image: 'bitnami/redis:latest'
+    image: bitnami/redis:latest
     container_name: redis
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
@@ -108,7 +108,7 @@ services:
   ui:
     build: .
     environment:
-      BEAVER_API_HOST: http://localhost:8000
+      BEAVER_HOST: http://localhost
     ports:
       - 8501:8501
     volumes:
@@ -116,30 +116,6 @@ services:
     command: streamlit run Home.py
     depends_on:
       - api
-
-  telegraf:
-    image: telegraf
-    container_name: telegraf
-    restart: always
-    volumes:
-      - ./dashboard/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-    ports:
-      - 8125:8125
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    restart: always
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_INSTALL_PLUGINS=
-    ports:
-      - 4000:3000
-    volumes:
-      - ./dashboard/grafana_volume:/var/lib/grafana
-    depends_on:
-      - postgres
 
 
 volumes:

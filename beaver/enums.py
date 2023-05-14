@@ -24,5 +24,6 @@ class StreamProcessor(str, enum.Enum):
 
 
 class JobRunner(str, enum.Enum):
-    kafka = "CELERY"
+    celery = "CELERY"
+    rq = "RQ"
     synchronous = "SYNCHRONOUS"

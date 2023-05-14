@@ -1219,14 +1219,14 @@ cffi = {version = "*", markers = "implementation_name == \"pypy\""}
 
 [[package]]
 name = "redis"
-version = "4.5.4"
+version = "4.5.5"
 description = "Python client for Redis database and key-value store"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-async-timeout = {version = ">=4.0.2", markers = "python_version <= \"3.11.2\""}
+async-timeout = {version = ">=4.0.2", markers = "python_full_version <= \"3.11.2\""}
 
 [package.extras]
 hiredis = ["hiredis (>=1.0.0)"]
@@ -1300,6 +1300,18 @@ dev = ["black (>=22.1.0)", "graphviz (>=0.10.1)", "gym (>=0.26.1)", "isort (>=5.
 docs = ["dominate", "flask", "ipykernel", "jupyter-client", "mike", "mkdocs", "mkdocs-awesome-pages-plugin", "mkdocs-charts-plugin", "mkdocs-material", "nbconvert", "numpy (>=1.24.1)", "pandas (>=1.3)", "python-slugify", "scipy (>=1.5)", "spacy", "watermark"]
 extra = ["river-extra"]
 torch = ["river-torch"]
+
+[[package]]
+name = "rq"
+version = "1.14.1"
+description = "RQ is a simple, lightweight, library for creating background jobs, and processing them."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+click = ">=5.0.0"
+redis = ">=3.5.0"
 
 [[package]]
 name = "scikit-learn"
@@ -1688,7 +1700,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "5fc9dbedf95b89b8fb3b0ed43a9e363587dd0a30e44242f4924c90e7ee559c17"
+content-hash = "4f2a16fa282c8fd35125d38f92ce53ce2ae9a05c9a3c3393a5aa7109de950bb2"
 
 [metadata.files]
 altair = [
@@ -2785,8 +2797,8 @@ pyzmq = [
     {file = "pyzmq-25.0.2.tar.gz", hash = "sha256:6b8c1bbb70e868dc88801aa532cae6bd4e3b5233784692b786f17ad2962e5149"},
 ]
 redis = [
-    {file = "redis-4.5.4-py3-none-any.whl", hash = "sha256:2c19e6767c474f2e85167909061d525ed65bea9301c0770bb151e041b7ac89a2"},
-    {file = "redis-4.5.4.tar.gz", hash = "sha256:73ec35da4da267d6847e47f68730fdd5f62e2ca69e3ef5885c6a78a9374c3893"},
+    {file = "redis-4.5.5-py3-none-any.whl", hash = "sha256:77929bc7f5dab9adf3acba2d3bb7d7658f1e0c2f1cafe7eb36434e751c471119"},
+    {file = "redis-4.5.5.tar.gz", hash = "sha256:dc87a0bdef6c8bfe1ef1e1c40be7034390c2ae02d92dcd0c7ca1729443899880"},
 ]
 requests = [
     {file = "requests-2.28.2-py3-none-any.whl", hash = "sha256:64299f4909223da747622c030b781c0d7811e359c37124b4bd368fb8c6518baa"},
@@ -2829,6 +2841,10 @@ river = [
     {file = "river-0.15.0-cp39-cp39-win32.whl", hash = "sha256:c1a783719938ed5a8dc0fd9aee3e62943ee07437ccb9e580d7898a3d1150ab86"},
     {file = "river-0.15.0-cp39-cp39-win_amd64.whl", hash = "sha256:01339893bb5dd5dd0c619cf15f8da4b21ae1d96b996a62c30707fecc6a2fb763"},
     {file = "river-0.15.0.tar.gz", hash = "sha256:29e85a10c161ffd825943485d8c6d2aec0b215ee510d378853ca262645205b28"},
+]
+rq = [
+    {file = "rq-1.14.1-py2.py3-none-any.whl", hash = "sha256:37e003db1da205e08db6cc4653b7c6ccfd9292000954240308abfce2ebde43ba"},
+    {file = "rq-1.14.1.tar.gz", hash = "sha256:5fb86038922ddd76eb2d9aa0adeec6dcf64f159dbbe730b26358b1417120dd44"},
 ]
 scikit-learn = [
     {file = "scikit-learn-1.2.2.tar.gz", hash = "sha256:8429aea30ec24e7a8c7ed8a3fa6213adf3814a6efbea09e16e0a0c71e1a1a3d7"},

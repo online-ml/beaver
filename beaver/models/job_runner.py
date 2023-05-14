@@ -21,6 +21,8 @@ class JobRunner(Base, table=True):  # type: ignore[call-arg]
     def infra(self):
         if self.protocol == enums.JobRunner.synchronous:
             return _infra.SynchronousJobRunner()
-        elif self.protocol == enums.JobRunner.celery:
+        if self.protocol == enums.JobRunner.celery:
             return _infra.CeleryJobRunner(self.url)
+        if self.protocol == enums.JobRunner.rq:
+            return _infra.RQJobRunner(self.url)
         raise NotImplementedError

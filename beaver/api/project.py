@@ -56,3 +56,14 @@ def read_project(
         **project.dict(),
         "experiments": logic.monitor_experiments(project_name=project.name),
     }
+
+
+@router.delete("/{name}", status_code=204)
+def delete_project(
+    name: str,
+    session: sqlm.Session = fastapi.Depends(db.get_session),
+):
+    project = session.get(models.Project, name)
+    if not project:
+        raise fastapi.HTTPException(status_code=404, detail="Project not found")
+    project.delete(session)

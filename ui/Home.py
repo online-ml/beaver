@@ -1,9 +1,10 @@
 import os
+import urllib.parse
 import streamlit as st
 import beaver_sdk
 
-BEAVER_API_HOST = os.environ["BEAVER_API_HOST"]
-BEAVER_SDK = beaver_sdk.Instance(BEAVER_API_HOST)
+BEAVER_HOST = os.environ["BEAVER_HOST"]
+BEAVER_SDK = beaver_sdk.Instance(urllib.parse.urljoin(BEAVER_HOST, ":8000"))
 
 if __name__ == "__main__":
 
@@ -12,7 +13,8 @@ if __name__ == "__main__":
 
     st.markdown(
         f"""
-        - **API is running at {BEAVER_API_HOST}**
-        - [**API documentation**]({BEAVER_API_HOST}/docs)
+        - API {urllib.parse.urljoin(BEAVER_HOST, ':8000/api')}
+        - API documentation {urllib.parse.urljoin(BEAVER_HOST, ':8000/api/docs')}
+        - rq dashboard {urllib.parse.urljoin(BEAVER_HOST, ':9181')}
     """
     )

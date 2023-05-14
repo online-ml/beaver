@@ -65,6 +65,17 @@ def create_experiment(
     return experiment
 
 
+@router.delete("/{name}", status_code=204)
+def delete_experiment(
+    name: str,
+    session: sqlm.Session = fastapi.Depends(db.get_session)
+):
+    experiment = session.get(models.Experiment, name)
+    if not experiment:
+        raise fastapi.HTTPException(status_code=404, detail="Experiment not found")
+    experiment.delete(session)
+
+
 @router.put("/{name}/start")
 def start_experiment(
     name: str,

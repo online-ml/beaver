@@ -66,22 +66,28 @@ def iter_dataset_for_experiment(
             ORDER BY ts
             """,
         )
+
+        yield from (
+            (
+                dt.datetime.fromisoformat(r["ts"]),
+                r["key"],
+                json.loads(r["features"]) if r["features"] else None,
+                json.loads(r["target"]) if r["target"] else None,
+            )
+            for r in project.stream_processor.infra.stream_view(
+                name=dataset_name, since=since
+            )
+        )
+
+    elif project.stream_processor.protocol == enums.StreamProcessor.materialize.value:
+        ...
+
+
     else:
         raise RuntimeError(
             f"Unsupported stream processor protocol: {project.stream_processor.protocol}"
         )
 
-    yield from (
-        (
-            dt.datetime.fromisoformat(r["ts"]),
-            r["key"],
-            json.loads(r["features"]) if r["features"] else None,
-            json.loads(r["target"]) if r["target"] else None,
-        )
-        for r in project.stream_processor.infra.stream_view(
-            name=dataset_name, since=since
-        )
-    )
 
 
 def do_progressive_learning(experiment_name: str):

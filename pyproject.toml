@@ -19,6 +19,8 @@ celery = {extras = ["redis"], version = "^5.2.7"}
 river = "^0.15.0"
 websockets = "^10.4"
 httpx = "^0.23.3"
+rq = "^1.14.1"
+redis = "^4.5.5"
 
 [tool.poetry.group.ui.dependencies]
 streamlit = "^1.21.0"

@@ -45,3 +45,13 @@ def read_feature_set(
     if not feature_set:
         raise fastapi.HTTPException(status_code=404, detail="Feature set not found")
     return feature_set
+
+
+@router.delete("/{name}", status_code=204)  # type: ignore[no-redef]
+def delete_feature_set(
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
+):
+    feature_set = session.get(models.FeatureSet, name)
+    if not feature_set:
+        raise fastapi.HTTPException(status_code=404, detail="Feature set not found")
+    feature_set.delete(session)

@@ -57,7 +57,7 @@ pytest
 And also run the web interface.
 
 ```sh
-export BEAVER_API_HOST=http://localhost:8000
+export BEAVER_HOST=http://localhost
 streamlit run ui/Home.py
 ```
 

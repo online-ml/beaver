@@ -36,6 +36,16 @@ def read_message_bus(
     return {**message_bus.dict(), "topics": message_bus.infra.topic_names}
 
 
+@router.delete("/{name}", status_code=204)
+def delete_message_bus(
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
+):
+    message_bus = session.get(models.MessageBus, name)
+    if not message_bus:
+        raise fastapi.HTTPException(status_code=404, detail="Message bus not found")
+    message_bus.delete(session)
+
+
 @router.post("/{name}", status_code=201)
 def send_message(
     name: str,

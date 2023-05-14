@@ -21,4 +21,6 @@ class StreamProcessor(Base, table=True):  # type: ignore[call-arg]
     def infra(self):
         if self.protocol == enums.StreamProcessor.sqlite:
             return _infra.SQLiteStreamProcessor(url=self.url)
+        if self.protocol == enums.StreamProcessor.materialize:
+            return _infra.MaterializeStreamProcessor(url=self.url)
         raise NotImplementedError

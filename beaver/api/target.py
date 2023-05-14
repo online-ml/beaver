@@ -42,3 +42,14 @@ def read_target(
     if not target:
         raise fastapi.HTTPException(status_code=404, detail="Target not found")
     return target
+
+
+@router.delete("/{name}", status_code=204)
+def delete_target(
+    name: str,
+    session: sqlm.Session = fastapi.Depends(db.get_session),
+):
+    target = session.get(models.Target, name)
+    if not target:
+        raise fastapi.HTTPException(status_code=404, detail="Target not found")
+    target.delete(session)

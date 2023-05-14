@@ -12,3 +12,7 @@ class Base(sqlmodel.SQLModel):
         session.commit()
         session.refresh(self)
         return self
+
+    def delete(self, session: sqlmodel.Session):
+        session.delete(self)
+        session.commit()
