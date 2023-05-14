@@ -53,13 +53,20 @@ def create_experiment(
             status_code=400, detail="Model does not implement the expected protocol"
         )
 
+
+    # experiment.can_learn = isinstance(model_obj, ModelThatCanLearn)
+    # experiment.model_state = dill.dumps(model_obj)
+    # logic.do_progressive_learning(experiment)
+
+    # return experiment
+
     experiment.can_learn = isinstance(model_obj, ModelThatCanLearn)
     experiment.model_state = dill.dumps(model_obj)
     experiment.save(session)
 
     # Run inference and learning jobs
     _ = project.job_runner.infra.start(
-        functools.partial(logic.do_progressive_learning, experiment.name)
+        functools.partial(logic.do_progressive_learning_from_experiment_name, experiment.name)
     )
 
     return experiment
@@ -83,7 +90,7 @@ def start_experiment(
 ):
     experiment = session.get(models.Experiment, name)
     experiment.project.job_runner.infra.start(
-        functools.partial(logic.do_progressive_learning, experiment.name)
+        functools.partial(logic.do_progressive_learning_from_experiment_name, experiment.name)
     )
 
 
@@ -94,5 +101,5 @@ def stop_experiment(
 ):
     experiment = session.get(models.Experiment, name)
     experiment.project.job_runner.infra.start(
-        functools.partial(logic.do_progressive_learning, experiment.name)
+        functools.partial(logic.do_progressive_learning_from_experiment_name, experiment.name)
     )

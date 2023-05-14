@@ -63,6 +63,11 @@ class KafkaMessageBus(kafka.KafkaProducer):
     def topic_names(self) -> typing.List[str]:
         return list(self.list_topics().keys())
 
+    def send(self, message: Message) -> None:
+        super().send(
+            topic=message.topic, value=message.value, key=message.key
+        )
+
 
 class RedpandaMessageBus(KafkaMessageBus):
     ...

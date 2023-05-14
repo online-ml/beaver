@@ -138,7 +138,7 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
 
     samples = list(
         logic.iter_dataset_for_experiment(
-            experiment_name=experiment.name,
+            experiment=experiment,
             since=dt.datetime(1999, 12, 31),
             session=session,
         )
@@ -147,7 +147,7 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
 
     samples = list(
         logic.iter_dataset_for_experiment(
-            experiment_name=experiment.name,
+            experiment=experiment,
             since=dt.datetime(2000, 1, 4),
             session=session,
         )

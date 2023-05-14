@@ -22,15 +22,3 @@ class FeatureSet(Base, table=True):  # type: ignore[call-arg]
         sa_relationship_kwargs={"uselist": False}
     )
     experiments: list["Experiment"] = sqlmodel.Relationship(back_populates="feature_set")  # type: ignore[name-defined]
-
-    def stream(self, since: dt.datetime):
-        return (
-            {
-                "key": r[self.key_field],
-                "ts": dt.datetime.fromisoformat(r[self.ts_field]),
-                "features": json.loads(r[self.value_field]),
-            }
-            for r in self.project.stream_processor.infra.stream_view(
-                name=self.name, since=since
-            )
-        )

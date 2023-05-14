@@ -7,16 +7,15 @@ from beaver import db, enums, models, infra
 
 
 def iter_dataset_for_experiment(
-    experiment_name: str, since: dt.datetime, session: sqlm.Session = None
+    experiment: models.Experiment, since: dt.datetime, session: sqlm.Session = None
 ):
 
-    dataset_name = f"{experiment_name}_dataset"
+    dataset_name = f"{experiment.name}_dataset"
 
     with (session or db.session()) as session:
-        experiment = session.get(models.Experiment, experiment_name)
-        project = experiment.project
+        project = session.get(models.Project, experiment.project_name)
         project.stream_processor
-        experiment.feature_set
+        feature_set = session.get(models.FeatureSet, experiment.feature_set_name)
         project.target
 
     if project.stream_processor.protocol == enums.StreamProcessor.sqlite.value:
@@ -24,16 +23,16 @@ def iter_dataset_for_experiment(
         # Unlabelled samples that need predicting
         query = f"""
         SELECT
-            features.{experiment.feature_set.ts_field} AS ts,
-            features.{experiment.feature_set.key_field} AS key,
-            features.{experiment.feature_set.value_field} AS features,
+            features.{feature_set.ts_field} AS ts,
+            features.{feature_set.key_field} AS key,
+            features.{feature_set.value_field} AS features,
             NULL as target
-        FROM {experiment.feature_set.name} features
-        WHERE key NOT IN (
+        FROM {feature_set.name} features
+        WHERE features.{feature_set.key_field} NOT IN (
             SELECT key
             FROM messages
             WHERE topic = '{project.predictions_topic_name}'
-            AND JSON_EXTRACT(value, '$.experiment') = '{experiment_name}'
+            AND JSON_EXTRACT(value, '$.experiment') = '{experiment.name}'
         )
         """
 
@@ -53,18 +52,20 @@ def iter_dataset_for_experiment(
                     JSON_EXTRACT(value, '$.features') AS features
                 FROM messages
                 WHERE topic = '{project.predictions_topic_name}'
-                AND JSON_EXTRACT(value, '$.experiment') = '{experiment_name}'
+                AND JSON_EXTRACT(value, '$.experiment') = '{experiment.name}'
             ) predictions ON
                 targets.key = predictions.key
             """
 
+        query = f"""
+        SELECT *
+        FROM ({query})
+        ORDER BY ts
+        """
+
         project.stream_processor.infra.create_view(
             name=dataset_name,
-            query=f"""
-            SELECT *
-            FROM ({query})
-            ORDER BY ts
-            """,
+            query=query
         )
 
         yield from (
@@ -80,8 +81,43 @@ def iter_dataset_for_experiment(
         )
 
     elif project.stream_processor.protocol == enums.StreamProcessor.materialize.value:
-        ...
 
+        query = f"""
+        SELECT
+            features.{feature_set.ts_field} AS ts,
+            features.{feature_set.key_field} AS key,
+            features.{feature_set.value_field} AS features,
+            NULL as target
+        FROM {feature_set.name} features
+        WHERE features.{feature_set.key_field} NOT IN (
+            SELECT key
+            FROM {project.predictions_topic_name}
+            AND value['experiment'] = '{experiment.name}'
+        )
+        """
+
+        query = f"""
+        SELECT *
+        FROM ({query})
+        ORDER BY ts
+        """
+
+        project.stream_processor.infra.create_view(
+            name=dataset_name,
+            query=query
+        )
+
+        yield from (
+            (
+                r["ts"],
+                r["key"],
+                r["features"],
+                r["target"]
+            )
+            for r in project.stream_processor.infra.stream_view(
+                name=dataset_name, since=since
+            )
+        )
 
     else:
         raise RuntimeError(
@@ -89,8 +125,7 @@ def iter_dataset_for_experiment(
         )
 
 
-
-def do_progressive_learning(experiment_name: str):
+def do_progressive_learning(experiment: models.Experiment):
     """
 
     Progressive learning is the act of intervealing predictions and learning. It is specific to
@@ -119,11 +154,10 @@ def do_progressive_learning(experiment_name: str):
     """
 
     with db.session() as session:
-        experiment = session.get(models.Experiment, experiment_name)
-        project = experiment.project
+        project = session.get(models.Project, experiment.project_name)
         message_bus = project.message_bus
         model = experiment.get_model()
-        feature_set = experiment.feature_set
+        feature_set = session.get(models.FeatureSet, experiment.feature_set_name)
 
     job = models.Job(experiment=experiment)
 
@@ -140,7 +174,7 @@ def do_progressive_learning(experiment_name: str):
     features_used_for_predicting: dict[str, dict] = {}
 
     for ts, key, features, label in iter_dataset_for_experiment(
-        experiment_name=experiment.name, since=since
+        experiment=experiment, since=since
     ):
         # LEARNING
         if label is not None:
@@ -154,21 +188,20 @@ def do_progressive_learning(experiment_name: str):
             if project.task == enums.Task.binary_clf.value:
                 y_pred = bool(y_pred)
 
-            message_bus.infra.send(
-                infra.Message(
-                    topic=project.predictions_topic_name,
-                    key=str(uuid.uuid4()),
-                    value=json.dumps(
-                        {
-                            "key": key,
-                            "project": project.name,
-                            "experiment": experiment.name,
-                            "prediction": json.dumps(y_pred),
-                            "features": json.dumps(features),
-                        }
-                    ),
-                )
+            prediction_event = infra.Message(
+                topic=project.predictions_topic_name,
+                key=str(uuid.uuid4()),
+                value=json.dumps(
+                    {
+                        "key": key,
+                        "project": project.name,
+                        "experiment": experiment.name,
+                        "prediction": json.dumps(y_pred),
+                        "features": json.dumps(features),
+                    }
+                ),
             )
+            message_bus.infra.send(prediction_event)
             job.n_predictions += 1
             features_used_for_predicting[key] = features
         # Bookkeeping
@@ -180,6 +213,12 @@ def do_progressive_learning(experiment_name: str):
         session.add(job)
         session.commit()
         session.refresh(experiment)
+
+
+def do_progressive_learning_from_experiment_name(experiment_name: str):
+    with db.session() as session:
+        experiment = session.get(models.Experiment, experiment_name)
+    do_progressive_learning(experiment)
 
 
 def get_experiment_performance_for_project(project_name: str) -> dict:
