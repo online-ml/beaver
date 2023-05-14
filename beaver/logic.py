@@ -258,6 +258,10 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
         project.stream_processor.infra.create_view(
             name=performance_view_name, query=query
         )
+
+    elif project.stream_processor.protocol == enums.StreamProcessor.materialize.value:
+        ...
+
     else:
         raise RuntimeError(
             f"Unsupported stream processor protocol: {project.stream_processor.protocol}"

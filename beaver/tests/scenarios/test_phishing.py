@@ -121,7 +121,7 @@ def test_phishing(sdk, sqlite_mb_path):
     )
 
     # Check predictions were made
-    state = project.state()
+    state = project.state(with_experiments=True)
     assert state["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
     assert state["experiments"]["phishing_experiment_1"]["n_learnings"] == 0
     assert state["experiments"]["phishing_experiment_1"]["accuracy"] == 0
@@ -140,7 +140,7 @@ def test_phishing(sdk, sqlite_mb_path):
     exp2.start()
 
     # Check learning happened
-    state = project.state()
+    state = project.state(with_experiments=True)
     assert state["experiments"]["phishing_experiment_1"]["n_predictions"] == 10
     assert state["experiments"]["phishing_experiment_1"]["n_learnings"] == 10
     assert state["experiments"]["phishing_experiment_1"]["accuracy"] == 0.3
@@ -160,7 +160,7 @@ def test_phishing(sdk, sqlite_mb_path):
     exp2.start()
 
     # Check stats
-    state = project.state()
+    state = project.state(with_experiments=True)
     assert state["experiments"]["phishing_experiment_1"]["n_predictions"] == 15
     assert state["experiments"]["phishing_experiment_1"]["n_learnings"] == 15
     assert round(state["experiments"]["phishing_experiment_1"]["accuracy"], 3) == 0.467

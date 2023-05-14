@@ -47,15 +47,16 @@ def read_projects(
 def read_project(
     name: str,
     session: sqlm.Session = fastapi.Depends(db.get_session),
+    with_experiments: bool = False,
 ):
     """Return a project's current state."""
     project = session.get(models.Project, name)
     if not project:
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
-    return {
-        **project.dict(),
-        "experiments": logic.monitor_experiments(project_name=project.name),
-    }
+    state = project.dict()
+    if with_experiments:
+        state["experiments"] = logic.monitor_experiments(project_name=project.name)
+    return state
 
 
 @router.delete("/{name}", status_code=204)

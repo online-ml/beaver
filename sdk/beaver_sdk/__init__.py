@@ -190,8 +190,8 @@ class Project(SDK):
     def delete(self):
         return self.request("DELETE", f"/api/project/{self.name}", as_json=False)
 
-    def state(self):
-        return self.get(f"/api/project/{self.name}")
+    def state(self, with_experiments: bool = False):
+        return self.get(f"/api/project/{self.name}", params={"with_experiments": with_experiments})
 
     @property
     def message_bus(self):
