@@ -53,13 +53,6 @@ def create_experiment(
             status_code=400, detail="Model does not implement the expected protocol"
         )
 
-
-    # experiment.can_learn = isinstance(model_obj, ModelThatCanLearn)
-    # experiment.model_state = dill.dumps(model_obj)
-    # logic.do_progressive_learning(experiment)
-
-    # return experiment
-
     experiment.can_learn = isinstance(model_obj, ModelThatCanLearn)
     experiment.model_state = dill.dumps(model_obj)
     experiment.save(session)

@@ -28,6 +28,7 @@ def iter_dataset_for_experiment(
             features.{feature_set.value_field} AS features,
             NULL as target
         FROM {feature_set.name} features
+        -- Anti-join to exclude samples that have already been predicted
         WHERE features.{feature_set.key_field} NOT IN (
             SELECT key
             FROM messages
@@ -46,7 +47,7 @@ def iter_dataset_for_experiment(
                 predictions.features,
                 targets.{project.target.value_field} as target
             FROM {project.target_view_name} targets
-            LEFT JOIN (
+            INNER JOIN (
                 SELECT
                     JSON_EXTRACT(value, '$.key') AS key,
                     JSON_EXTRACT(value, '$.features') AS features
@@ -87,14 +88,36 @@ def iter_dataset_for_experiment(
             features.{feature_set.ts_field} AS ts,
             features.{feature_set.key_field} AS key,
             features.{feature_set.value_field} AS features,
-            NULL as target
+            NULL AS target
         FROM {feature_set.name} features
-        WHERE features.{feature_set.key_field} NOT IN (
-            SELECT key
+        -- Anti-join to exclude samples that have already been predicted
+        LEFT JOIN (
+            SELECT prediction ->> 'key' AS key
             FROM {project.predictions_topic_name}
-            AND value['experiment'] = '{experiment.name}'
-        )
+            WHERE prediction ->> 'experiment' = '{experiment.name}'
+        ) predictions ON features.{feature_set.key_field} = predictions.key
+        WHERE predictions.key IS NULL
         """
+
+        # Labelled samples to learn on
+        if project.target is not None and experiment.can_learn:
+            query += f""" UNION ALL
+
+            SELECT
+                targets.{project.target.ts_field} AS ts,
+                targets.{project.target.key_field} AS key,
+                predictions.features,
+                CAST(targets.{project.target.value_field} AS STRING) as target
+            FROM {project.target_view_name} targets
+            INNER JOIN (
+                SELECT
+                    prediction ->> 'key' AS key,
+                    (prediction ->> 'features')::jsonb AS features
+                FROM {project.predictions_topic_name}
+                WHERE prediction ->> 'experiment' = '{experiment.name}'
+            ) predictions ON
+                targets.{project.target.key_field} = predictions.key
+            """
 
         query = f"""
         SELECT *
@@ -107,12 +130,17 @@ def iter_dataset_for_experiment(
             query=query
         )
 
+        target_type = {
+            enums.Task.regression.value: float,
+            enums.Task.binary_clf.value: bool,
+        }[project.task]
+
         yield from (
             (
                 r["ts"],
                 r["key"],
                 r["features"],
-                r["target"]
+                target_type(r["target"]) if r["target"] else None,
             )
             for r in project.stream_processor.infra.stream_view(
                 name=dataset_name, since=since
@@ -173,11 +201,23 @@ def do_progressive_learning(experiment: models.Experiment):
     # can be used for learning.
     features_used_for_predicting: dict[str, dict] = {}
 
-    for ts, key, features, label in iter_dataset_for_experiment(
+    def save():
+        with db.session() as session:
+            experiment.set_model(model)
+            session.add(experiment)
+            session.add(job)
+            session.commit()
+            session.refresh(experiment)
+
+
+    last_checkpoint = dt.datetime.now()
+
+    for i, (ts, key, features, label) in enumerate(iter_dataset_for_experiment(
         experiment=experiment, since=since
-    ):
+    )):
         # LEARNING
         if label is not None:
+            print('LEARNING')
             model.learn(features or features_used_for_predicting[key], label)
             job.n_learnings += 1
         # PREDICTING
@@ -207,12 +247,18 @@ def do_progressive_learning(experiment: models.Experiment):
         # Bookkeeping
         experiment.last_sample_ts = ts
 
-    with db.session() as session:
-        experiment.set_model(model)
-        session.add(experiment)
-        session.add(job)
-        session.commit()
-        session.refresh(experiment)
+        # Checkpoint every minute
+        if (dt.datetime.now() - last_checkpoint).total_seconds() > 60:
+            save()
+            last_checkpoint = dt.datetime.now()
+
+
+        if i > 30:
+            break
+
+    else:
+        save()
+
 
 
 def do_progressive_learning_from_experiment_name(experiment_name: str):
@@ -299,7 +345,35 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
         )
 
     elif project.stream_processor.protocol == enums.StreamProcessor.materialize.value:
-        ...
+
+        if project.task == enums.Task.regression.value:
+            query = f"""
+            SELECT
+                experiment,
+                AVG(POW(y_true - y_pred, 2)) AS mse,
+                AVG(ABS(y_true - y_pred)) AS mae
+            FROM (
+                SELECT
+                    prediction ->> 'key' AS key,
+                    prediction ->> 'experiment' AS experiment,
+                    CAST(prediction ->> 'prediction' AS FLOAT) AS y_pred
+                FROM {project.predictions_topic_name}
+            )
+            INNER JOIN (
+                SELECT
+                    {project.target.key_field} AS key,
+                    CAST({project.target.value_field} AS FLOAT) AS y_true
+                FROM {project.target_view_name}
+            ) USING (key)
+            GROUP BY 1
+            """
+        else:
+            raise RuntimeError(
+                f"Unsupported task {project.task} for stream processor protocol {project.stream_processor.protocol}"
+            )
+        project.stream_processor.infra.create_view(
+            name=performance_view_name, query=query
+        )
 
     else:
         raise RuntimeError(

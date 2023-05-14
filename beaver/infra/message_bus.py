@@ -56,7 +56,7 @@ class KafkaMessageBus(kafka.KafkaProducer):
         super().__init__(
             bootstrap_servers=[url],
             key_serializer=str.encode,
-            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+            value_serializer=lambda v: v.encode("utf-8"),
         )
 
     @property

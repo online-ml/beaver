@@ -36,17 +36,22 @@ def create_project(
                 status_code=400,
                 detail=f"Materialize only supports Kafka and Redpanda message buses",
             )
+        stream_processor.infra.execute(f'DROP VIEW IF EXISTS {project.predictions_topic_name}')
+        stream_processor.infra.execute(f'DROP SOURCE IF EXISTS {project.predictions_topic_name}_src')
         stream_processor.infra.execute(f"""
         CREATE MATERIALIZED SOURCE {project.predictions_topic_name}_src
         FROM KAFKA BROKER '{message_bus.url}' TOPIC '{project.predictions_topic_name}'
             KEY FORMAT TEXT
             VALUE FORMAT BYTES
-            INCLUDE KEY AS key, TIMESTAMP AS received_at;
+            INCLUDE KEY AS key, TIMESTAMP AS ts;
         """)
 
         stream_processor.infra.execute(f"""
         CREATE VIEW {project.predictions_topic_name} AS (
-            SELECT *
+            SELECT
+                key,
+                ts,
+                CAST(CONVERT_FROM(data, 'utf8') AS JSONB) AS prediction
             FROM {project.predictions_topic_name}_src
         )
         """)

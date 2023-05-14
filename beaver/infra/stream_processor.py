@@ -56,7 +56,7 @@ class MaterializeStreamProcessor:
         conn.autocommit = True
         with conn.cursor() as cur:
             cur.execute(f"DROP VIEW IF EXISTS {name}")
-            cur.execute(f"CREATE VIEW {name} AS {query}")
+            cur.execute(f"CREATE VIEW {name} AS ({query})")
 
     def stream_view(self, name, since=None):
 
