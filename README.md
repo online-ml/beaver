@@ -6,8 +6,6 @@
   <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
 </div>
 
-## 👋 Introduction
-
 Beaver is...
 
 ✔ [*The whole package*](https://www.youtube.com/watch?v=nzFTmJnIakk&list=PLIU25-FciwNaz5PqWPiHmPCMOFYoEsJ8c&index=5) • it's a framework to develop, deploy, and maintain machine learning models. And that includes feature engineering.
@@ -24,7 +22,7 @@ Beaver is...
 
 ## 🤱 Getting started
 
-There is a pre-built image you can use 🐳
+There is a [pre-built image](https://github.com/online-ml/packages/container/package/beaver) you can use 🐳
 
 ```sh
 docker pull ghcr.io/online-ml/beaver:latest
