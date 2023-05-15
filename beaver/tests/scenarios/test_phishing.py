@@ -64,7 +64,6 @@ def sqlite_mb_path():
 
 
 def test_phishing(sdk, sqlite_mb_path):
-
     sdk.message_bus.create(name="test_mb", protocol="SQLITE", url=str(sqlite_mb_path))
     sdk.stream_processor.create(
         name="test_sp", protocol="SQLITE", url=str(sqlite_mb_path)

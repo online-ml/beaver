@@ -9,17 +9,15 @@ from beaver import db, enums, models, infra
 def iter_dataset_for_experiment(
     experiment: models.Experiment, since: dt.datetime, session: sqlm.Session = None
 ):
-
     dataset_name = f"{experiment.name}_dataset"
 
-    with (session or db.session()) as session:
+    with session or db.session() as session:
         project = session.get(models.Project, experiment.project_name)
         project.stream_processor
         feature_set = session.get(models.FeatureSet, experiment.feature_set_name)
         project.target
 
     if project.stream_processor.protocol == enums.StreamProcessor.sqlite.value:
-
         # Unlabelled samples that need predicting
         query = f"""
         SELECT
@@ -47,7 +45,7 @@ def iter_dataset_for_experiment(
                 predictions.features,
                 targets.{project.target.value_field} as target
             FROM {project.target_view_name} targets
-            INNER JOIN (
+            LEFT JOIN (
                 SELECT
                     JSON_EXTRACT(value, '$.key') AS key,
                     JSON_EXTRACT(value, '$.features') AS features
@@ -64,10 +62,7 @@ def iter_dataset_for_experiment(
         ORDER BY ts
         """
 
-        project.stream_processor.infra.create_view(
-            name=dataset_name,
-            query=query
-        )
+        project.stream_processor.infra.create_view(name=dataset_name, query=query)
 
         yield from (
             (
@@ -82,7 +77,6 @@ def iter_dataset_for_experiment(
         )
 
     elif project.stream_processor.protocol == enums.StreamProcessor.materialize.value:
-
         query = f"""
         SELECT
             features.{feature_set.ts_field} AS ts,
@@ -125,10 +119,7 @@ def iter_dataset_for_experiment(
         ORDER BY ts
         """
 
-        project.stream_processor.infra.create_view(
-            name=dataset_name,
-            query=query
-        )
+        project.stream_processor.infra.create_view(name=dataset_name, query=query)
 
         target_type = {
             enums.Task.regression.value: float,
@@ -209,15 +200,13 @@ def do_progressive_learning(experiment: models.Experiment):
             session.commit()
             session.refresh(experiment)
 
-
     last_checkpoint = dt.datetime.now()
 
-    for i, (ts, key, features, label) in enumerate(iter_dataset_for_experiment(
-        experiment=experiment, since=since
-    )):
+    for i, (ts, key, features, label) in enumerate(
+        iter_dataset_for_experiment(experiment=experiment, since=since)
+    ):
         # LEARNING
         if label is not None:
-            print('LEARNING')
             model.learn(features or features_used_for_predicting[key], label)
             job.n_learnings += 1
         # PREDICTING
@@ -251,14 +240,8 @@ def do_progressive_learning(experiment: models.Experiment):
         if (dt.datetime.now() - last_checkpoint).total_seconds() > 60:
             save()
             last_checkpoint = dt.datetime.now()
-
-
-        if i > 30:
-            break
-
     else:
         save()
-
 
 
 def do_progressive_learning_from_experiment_name(experiment_name: str):
@@ -268,7 +251,6 @@ def do_progressive_learning_from_experiment_name(experiment_name: str):
 
 
 def get_experiment_performance_for_project(project_name: str) -> dict:
-
     performance_view_name = f"{project_name}_performance"
 
     with db.session() as session:
@@ -345,7 +327,6 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
         )
 
     elif project.stream_processor.protocol == enums.StreamProcessor.materialize.value:
-
         if project.task == enums.Task.regression.value:
             query = f"""
             SELECT
@@ -387,7 +368,6 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
 
 
 def monitor_experiments(project_name: str):
-
     experiment_performance = get_experiment_performance_for_project(project_name)
 
     with db.session() as session:

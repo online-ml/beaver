@@ -136,20 +136,16 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
     )
     experiment.save(session)
 
-    samples = list(
-        logic.iter_dataset_for_experiment(
-            experiment=experiment,
-            since=dt.datetime(1999, 12, 31),
-            session=session,
+    for cutoff_date, n_expected_samples in [
+        (dt.datetime(1999, 12, 31), 6),
+        (dt.datetime(2000, 1, 3), 3),
+        (dt.datetime(2000, 1, 4), 2),
+    ]:
+        samples = list(
+            logic.iter_dataset_for_experiment(
+                experiment=experiment,
+                since=cutoff_date,
+                session=session,
+            )
         )
-    )
-    assert len(samples) == 6
-
-    samples = list(
-        logic.iter_dataset_for_experiment(
-            experiment=experiment,
-            since=dt.datetime(2000, 1, 4),
-            session=session,
-        )
-    )
-    assert len(samples) == 2
+        assert len(samples) == n_expected_samples
