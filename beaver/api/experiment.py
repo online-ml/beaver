@@ -42,7 +42,6 @@ def create_experiment(
     experiment: models.Experiment,
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ) -> ExperimentOut:
-
     project = session.get(models.Project, experiment.project_name)
     if not project:
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
@@ -59,7 +58,7 @@ def create_experiment(
 
     # Run inference and learning jobs
     _ = project.job_runner.infra.start(
-        functools.partial(logic.do_progressive_learning_from_experiment_name, experiment.name)
+        functools.partial(logic.do_progressive_learning, experiment.name)
     )
 
     return experiment
@@ -67,8 +66,7 @@ def create_experiment(
 
 @router.delete("/{name}", status_code=204)
 def delete_experiment(
-    name: str,
-    session: sqlm.Session = fastapi.Depends(db.get_session)
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
 ):
     experiment = session.get(models.Experiment, name)
     if not experiment:
@@ -83,7 +81,7 @@ def start_experiment(
 ):
     experiment = session.get(models.Experiment, name)
     experiment.project.job_runner.infra.start(
-        functools.partial(logic.do_progressive_learning_from_experiment_name, experiment.name)
+        functools.partial(logic.do_progressive_learning, experiment.name)
     )
 
 
@@ -94,5 +92,5 @@ def stop_experiment(
 ):
     experiment = session.get(models.Experiment, name)
     experiment.project.job_runner.infra.start(
-        functools.partial(logic.do_progressive_learning_from_experiment_name, experiment.name)
+        functools.partial(logic.do_progressive_learning, experiment.name)
     )

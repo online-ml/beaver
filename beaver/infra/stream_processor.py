@@ -7,14 +7,18 @@ import typing
 
 
 class StreamProcessor(typing.Protocol):
-
     def execute(self, query: str):
+        ...
+
+    def query(self, query: str) -> typing.Generator[dict, None, None]:
         ...
 
     def create_view(self, name: str, query: str):
         ...
 
-    def stream_view(self, name: str, since: dt.datetime | None = None) -> typing.Generator[dict, None, None]:
+    def stream_view(
+        self, name: str, since: dt.datetime | None = None
+    ) -> typing.Generator[dict, None, None]:
         ...
 
 
@@ -22,9 +26,15 @@ class SQLiteStreamProcessor:
     def __init__(self, url: str):
         self.url = url
 
-    def execute_query(self, query):
+    def execute(self, query):
         with sqlite3.connect(self.url) as con:
             con.execute(query)
+
+    def query(self, query):
+        with sqlite3.connect(self.url) as con:
+            con.row_factory = sqlite3.Row
+            rows = list(map(dict, con.execute(query)))
+        yield from rows
 
     def create_view(self, name, query):
         with sqlite3.connect(self.url) as con:
@@ -33,12 +43,10 @@ class SQLiteStreamProcessor:
 
     def stream_view(self, name, since=None):
         with sqlite3.connect(self.url) as con:
-            con.row_factory = sqlite3.Row
             query = f"SELECT * FROM {name}"
             if since:
                 query += f" WHERE ts > '{since}'"
-            rows = list(map(dict, con.execute(query)))
-        yield from rows
+            yield from self.query(query)
 
 
 class MaterializeStreamProcessor:
@@ -51,6 +59,14 @@ class MaterializeStreamProcessor:
         with conn.cursor() as cur:
             cur.execute(query)
 
+    def query(self, query):
+        conn = psycopg.connect(self.url)
+        with conn.cursor() as cur:
+            cur.execute(query)
+            columns = [desc[0] for desc in cur.description]
+            for row in cur:
+                yield dict(zip(columns, row))
+
     def create_view(self, name, query):
         conn = psycopg.connect(self.url)
         conn.autocommit = True
@@ -59,7 +75,6 @@ class MaterializeStreamProcessor:
             cur.execute(f"CREATE VIEW {name} AS ({query})")
 
     def stream_view(self, name, since=None):
-
         # TODO: handle since
 
         # Let's query the view to see what it contains. That way we can associate each feature with

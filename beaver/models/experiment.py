@@ -7,7 +7,6 @@ from .base import Base
 
 
 class Experiment(Base, table=True):  # type: ignore[call-arg]
-
     # Attributes
     name: str = sqlmodel.Field(primary_key=True)
     model: bytes
@@ -24,7 +23,7 @@ class Experiment(Base, table=True):  # type: ignore[call-arg]
         sa_relationship_kwargs={"uselist": False}
     )
     feature_set: "FeatureSet" = sqlmodel.Relationship(back_populates="experiments")  # type: ignore[name-defined]
-    jobs: list["Job"] = sqlmodel.Relationship(back_populates="experiment")  # type: ignore[name-defined]
+    jobs: list["Job"] = sqlmodel.Relationship(back_populates="experiment", sa_relationship_kwargs={"cascade": "delete"})  # type: ignore[name-defined]
 
     def get_model(self):
         return dill.loads(self.model_state)

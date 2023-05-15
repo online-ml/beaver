@@ -144,7 +144,7 @@ def iter_dataset_for_experiment(
         )
 
 
-def do_progressive_learning(experiment: models.Experiment):
+def do_progressive_learning(experiment_name: str):
     """
 
     Progressive learning is the act of intervealing predictions and learning. It is specific to
@@ -173,6 +173,7 @@ def do_progressive_learning(experiment: models.Experiment):
     """
 
     with db.session() as session:
+        experiment = session.get(models.Experiment, experiment_name)
         project = session.get(models.Project, experiment.project_name)
         message_bus = project.message_bus
         model = experiment.get_model()
@@ -192,18 +193,10 @@ def do_progressive_learning(experiment: models.Experiment):
     # can be used for learning.
     features_used_for_predicting: dict[str, dict] = {}
 
-    def save():
-        with db.session() as session:
-            experiment.set_model(model)
-            session.add(experiment)
-            session.add(job)
-            session.commit()
-            session.refresh(experiment)
-
     last_checkpoint = dt.datetime.now()
 
-    for i, (ts, key, features, label) in enumerate(
-        iter_dataset_for_experiment(experiment=experiment, since=since)
+    for ts, key, features, label in iter_dataset_for_experiment(
+        experiment=experiment, since=since
     ):
         # LEARNING
         if label is not None:
@@ -238,16 +231,20 @@ def do_progressive_learning(experiment: models.Experiment):
 
         # Checkpoint every minute
         if (dt.datetime.now() - last_checkpoint).total_seconds() > 60:
-            save()
+            with db.session() as session:
+                experiment.set_model(model)
+                session.add(experiment)
+                session.add(job)
+                session.commit()
+                session.refresh(experiment)
             last_checkpoint = dt.datetime.now()
     else:
-        save()
-
-
-def do_progressive_learning_from_experiment_name(experiment_name: str):
-    with db.session() as session:
-        experiment = session.get(models.Experiment, experiment_name)
-    do_progressive_learning(experiment)
+        with db.session() as session:
+            experiment.set_model(model)
+            session.add(experiment)
+            session.add(job)
+            session.commit()
+            session.refresh(experiment)
 
 
 def get_experiment_performance_for_project(project_name: str) -> dict:
@@ -322,9 +319,6 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
             raise RuntimeError(
                 f"Unsupported task {project.task} for stream processor protocol {project.stream_processor.protocol}"
             )
-        project.stream_processor.infra.create_view(
-            name=performance_view_name, query=query
-        )
 
     elif project.stream_processor.protocol == enums.StreamProcessor.materialize.value:
         if project.task == enums.Task.regression.value:
@@ -352,19 +346,13 @@ def get_experiment_performance_for_project(project_name: str) -> dict:
             raise RuntimeError(
                 f"Unsupported task {project.task} for stream processor protocol {project.stream_processor.protocol}"
             )
-        project.stream_processor.infra.create_view(
-            name=performance_view_name, query=query
-        )
 
     else:
         raise RuntimeError(
             f"Unsupported stream processor protocol: {project.stream_processor.protocol}"
         )
 
-    return {
-        r.pop("experiment"): r
-        for r in project.stream_processor.infra.stream_view(name=performance_view_name)
-    }
+    return {r.pop("experiment"): r for r in project.stream_processor.infra.query(query)}
 
 
 def monitor_experiments(project_name: str):
