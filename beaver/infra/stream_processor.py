@@ -1,9 +1,10 @@
-import contextlib
+from __future__ import annotations
+
 import datetime as dt
-import json
-import psycopg
 import sqlite3
 import typing
+
+import psycopg
 
 
 class StreamProcessor(typing.Protocol):
@@ -42,7 +43,7 @@ class SQLiteStreamProcessor:
             con.execute(f"CREATE VIEW {name} AS {query}")
 
     def stream_view(self, name, since=None):
-        with sqlite3.connect(self.url) as con:
+        with sqlite3.connect(self.url):
             query = f"SELECT * FROM {name}"
             if since:
                 query += f" WHERE ts > '{since}'"

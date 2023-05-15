@@ -1,6 +1,5 @@
-import datetime as dt
-import json
-import fastapi
+from __future__ import annotations
+
 import sqlmodel
 
 from .base import Base
@@ -18,7 +17,9 @@ class FeatureSet(Base, table=True):  # type: ignore[call-arg]
     project_name: str = sqlmodel.Field(default=None, foreign_key="project.name")
 
     # Relationships
-    project: "Project" = sqlmodel.Relationship(  # type: ignore[name-defined]
+    project: "Project" = sqlmodel.Relationship(  # noqa: F821, UP037
         sa_relationship_kwargs={"uselist": False}
     )
-    experiments: list["Experiment"] = sqlmodel.Relationship(back_populates="feature_set")  # type: ignore[name-defined]
+    experiments: list["Experiment"] = sqlmodel.Relationship(  # noqa: F821, UP037
+        back_populates="feature_set"
+    )

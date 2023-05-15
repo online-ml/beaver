@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import contextlib
 import os
+
 import sqlmodel as sqlm
 import sqlmodel.pool
 
-
-DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite://")
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite://")
 
 connect_args = (
     {

@@ -1,10 +1,10 @@
-import collections
-import contextlib
+from __future__ import annotations
+
 import datetime as dt
-import json
-import typing
-import kafka
 import sqlite3
+import typing
+
+import kafka
 import pydantic
 
 
@@ -17,7 +17,7 @@ class Message(pydantic.BaseModel):
 
 class MessageBus(typing.Protocol):
     @property
-    def topic_names(self) -> typing.List[str]:
+    def topic_names(self) -> list[str]:
         ...
 
     def send(self, message: Message) -> None:
@@ -33,7 +33,7 @@ class SQLiteMessageBus:
             )
 
     @property
-    def topic_names(self) -> typing.List[str]:
+    def topic_names(self) -> list[str]:
         with sqlite3.connect(self.url) as con:
             rows = con.execute("SELECT DISTINCT topic FROM messages").fetchall()
         return rows
@@ -60,7 +60,7 @@ class KafkaMessageBus(kafka.KafkaProducer):
         )
 
     @property
-    def topic_names(self) -> typing.List[str]:
+    def topic_names(self) -> list[str]:
         return list(self.list_topics().keys())
 
     def send(self, message: Message) -> None:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import base64
 import datetime as dt
 import functools
@@ -61,13 +63,11 @@ def create_experiment(
         functools.partial(logic.do_progressive_learning, experiment.name)
     )
 
-    return experiment
+    return ExperimentOut.from_orm(experiment)
 
 
 @router.delete("/{name}", status_code=204)
-def delete_experiment(
-    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
-):
+def delete_experiment(name: str, session: sqlm.Session = fastapi.Depends(db.get_session)):
     experiment = session.get(models.Experiment, name)
     if not experiment:
         raise fastapi.HTTPException(status_code=404, detail="Experiment not found")
@@ -80,6 +80,8 @@ def start_experiment(
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
     experiment = session.get(models.Experiment, name)
+    if not experiment:
+        raise fastapi.HTTPException(status_code=404, detail="Experiment not found")
     experiment.project.job_runner.infra.start(
         functools.partial(logic.do_progressive_learning, experiment.name)
     )
@@ -91,6 +93,8 @@ def stop_experiment(
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
     experiment = session.get(models.Experiment, name)
+    if not experiment:
+        raise fastapi.HTTPException(status_code=404, detail="Experiment not found")
     experiment.project.job_runner.infra.start(
         functools.partial(logic.do_progressive_learning, experiment.name)
     )

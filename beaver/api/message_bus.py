@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import fastapi
 import sqlmodel as sqlm
 
@@ -21,15 +23,11 @@ def get_message_buses(
     limit: int = fastapi.Query(default=100, lte=100),
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
-    return session.exec(
-        sqlm.select(models.MessageBus).offset(offset).limit(limit)
-    ).all()
+    return session.exec(sqlm.select(models.MessageBus).offset(offset).limit(limit)).all()
 
 
 @router.get("/{name}")
-def read_message_bus(
-    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
-):
+def read_message_bus(name: str, session: sqlm.Session = fastapi.Depends(db.get_session)):
     message_bus = session.get(models.MessageBus, name)
     if not message_bus:
         raise fastapi.HTTPException(status_code=404, detail="Message bus not found")
@@ -37,9 +35,7 @@ def read_message_bus(
 
 
 @router.delete("/{name}", status_code=204)
-def delete_message_bus(
-    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
-):
+def delete_message_bus(name: str, session: sqlm.Session = fastapi.Depends(db.get_session)):
     message_bus = session.get(models.MessageBus, name)
     if not message_bus:
         raise fastapi.HTTPException(status_code=404, detail="Message bus not found")

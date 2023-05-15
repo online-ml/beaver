@@ -1,5 +1,7 @@
 <h1>🦫 Beaver • MLOps for (online) machine learning</h1>
 
+[![ci](https://github.com/online-ml/beaver/actions/workflows/main.yml/badge.svg)](https://github.com/online-ml/beaver/actions/workflows/main.yml)
+
 <div align="center" >
   <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
 </div>
@@ -18,7 +20,7 @@ Beaver is...
 
 ✔ [*Interfaces all the way down*](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/) • you can plug in your existing message broker, stream processor, model store, etc. At least, that's the idea.
 
-✔ *Batteries included* • default infrastructure and monitoring are provided if needed.
+✔ *Batteries included* • default infrastructure and monitoring are at your disposal.
 
 ## 🤱 Getting started
 
