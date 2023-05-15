@@ -24,7 +24,14 @@ Beaver is...
 
 ## 🤱 Getting started
 
-The easiest way is to run the provided [`docker-compose.yaml`](docker-compose.yaml) 🐳
+There is a pre-built image you can use 🐳
+
+```sh
+docker pull ghcr.io/online-ml/beaver:latest
+docker run beaver
+```
+
+You can also build the provided [`docker-compose.yaml`](docker-compose.yaml) yourself:
 
 ```sh
 git clone git@github.com:online-ml/beaver.git
@@ -40,10 +47,6 @@ This is all you need to run Beaver. Check out the examples to see how to use it.
 
 - [🚕 Taxis](examples/taxis)
 - [🌳 Batch gradient boosting vs. random forest](examples/batch-trees)
-
-## 🚀 Deployment
-
-The `docker-compose.yaml` file is meant for development. You'll want to edit it if you're looking to deploy Beaver.
 
 ## 📝 License
 

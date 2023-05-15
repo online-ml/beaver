@@ -1,15 +1,8 @@
-from .message_bus import SQLiteMessageBus
-from .message_bus import KafkaMessageBus
-from .message_bus import RedpandaMessageBus
-from .message_bus import MessageBus
-from .message_bus import Message
-from .stream_processor import StreamProcessor
-from .stream_processor import SQLiteStreamProcessor
-from .stream_processor import MaterializeStreamProcessor
-from .job_runner import JobRunner
-from .job_runner import SynchronousJobRunner
-from .job_runner import RQJobRunner
+from __future__ import annotations
 
+from .job_runner import JobRunner, RQJobRunner, SynchronousJobRunner
+from .message_bus import KafkaMessageBus, Message, MessageBus, RedpandaMessageBus, SQLiteMessageBus
+from .stream_processor import MaterializeStreamProcessor, SQLiteStreamProcessor, StreamProcessor
 
 __all__ = [
     "SQLiteMessageBus",
