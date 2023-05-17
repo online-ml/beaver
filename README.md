@@ -2,8 +2,6 @@
 
 <p>
 
-<a href=>
-
 <!-- Tests -->
 <a href="https://github.com/online-ml/beaver/actions/workflows/unit-tests.yml">
 <img src="https://github.com/online-ml/beaver/actions/workflows/unit-tests.yml/badge.svg" alt="tests">
