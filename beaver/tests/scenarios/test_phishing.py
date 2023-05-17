@@ -1,15 +1,9 @@
-import base64
-import json
-import functools
-import collections
 import pathlib
 import urllib.parse
-import dill
 import pytest
 from fastapi.testclient import TestClient
 import sqlmodel
 import sqlmodel.pool
-import requests
 from river import datasets, linear_model, preprocessing
 
 from beaver.main import app

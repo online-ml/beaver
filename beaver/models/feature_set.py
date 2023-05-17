@@ -1,6 +1,3 @@
-import datetime as dt
-import json
-import fastapi
 import sqlmodel
 
 from .base import Base

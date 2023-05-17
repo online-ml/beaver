@@ -1,5 +1,4 @@
 from typing import Optional
-import fastapi
 import sqlmodel
 
 from beaver import enums

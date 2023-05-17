@@ -34,7 +34,7 @@ def create_project(
         if message_bus.protocol not in {enums.MessageBus.kafka, enums.MessageBus.redpanda}:
             raise fastapi.HTTPException(
                 status_code=400,
-                detail=f"Materialize only supports Kafka and Redpanda message buses",
+                detail="Materialize only supports Kafka and Redpanda message buses",
             )
         stream_processor.infra.execute(f'DROP VIEW IF EXISTS {project.predictions_topic_name}')
         stream_processor.infra.execute(f'DROP SOURCE IF EXISTS {project.predictions_topic_name}_src')

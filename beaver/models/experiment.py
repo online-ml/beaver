@@ -1,6 +1,5 @@
 import datetime as dt
 import dill
-import fastapi
 import sqlmodel
 
 from .base import Base

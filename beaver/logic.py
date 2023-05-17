@@ -1,7 +1,6 @@
 import datetime as dt
 import json
 import uuid
-import fastapi
 import sqlmodel as sqlm
 from beaver import db, enums, models, infra
 
@@ -177,7 +176,6 @@ def do_progressive_learning(experiment_name: str):
         project = session.get(models.Project, experiment.project_name)
         message_bus = project.message_bus
         model = experiment.get_model()
-        feature_set = session.get(models.FeatureSet, experiment.feature_set_name)
 
     job = models.Job(experiment=experiment)
 
@@ -248,8 +246,6 @@ def do_progressive_learning(experiment_name: str):
 
 
 def get_experiment_performance_for_project(project_name: str) -> dict:
-    performance_view_name = f"{project_name}_performance"
-
     with db.session() as session:
         project = session.get(models.Project, project_name)
         project.stream_processor

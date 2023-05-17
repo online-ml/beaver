@@ -1,7 +1,4 @@
-import collections
-import contextlib
 import datetime as dt
-import json
 import typing
 import kafka
 import sqlite3

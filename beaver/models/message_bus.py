@@ -1,4 +1,3 @@
-import fastapi
 import sqlmodel
 
 from beaver import infra as _infra, enums

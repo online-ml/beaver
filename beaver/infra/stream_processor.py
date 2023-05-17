@@ -1,6 +1,4 @@
-import contextlib
 import datetime as dt
-import json
 import psycopg
 import sqlite3
 import typing
