@@ -15,7 +15,9 @@ class MessageBus(Base, table=True):  # type: ignore[call-arg]
     url: str
 
     # Relationships
-    projects: list["Project"] = sqlmodel.Relationship(back_populates="message_bus")  # type: ignore[name-defined]
+    projects: list["Project"] = sqlmodel.Relationship(  # noqa: F821
+        back_populates="message_bus"
+    )
 
     @property
     def infra(self):

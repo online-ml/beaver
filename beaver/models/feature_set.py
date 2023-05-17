@@ -18,7 +18,9 @@ class FeatureSet(Base, table=True):  # type: ignore[call-arg]
     project_name: str = sqlmodel.Field(default=None, foreign_key="project.name")
 
     # Relationships
-    project: "Project" = sqlmodel.Relationship(  # type: ignore[name-defined]
+    project: "Project" = sqlmodel.Relationship(  # noqa: F821
         sa_relationship_kwargs={"uselist": False}
     )
-    experiments: list["Experiment"] = sqlmodel.Relationship(back_populates="feature_set")  # type: ignore[name-defined]
+    experiments: list["Experiment"] = sqlmodel.Relationship(  # noqa: F821
+        back_populates="feature_set"
+    )

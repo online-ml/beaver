@@ -15,7 +15,9 @@ class JobRunner(Base, table=True):  # type: ignore[call-arg]
     url: str | None = sqlmodel.Field(default=None)
 
     # Relationships
-    projects: list["Project"] = sqlmodel.Relationship(back_populates="job_runner")  # type: ignore[name-defined]
+    projects: list["Project"] = sqlmodel.Relationship(  # noqa: F821
+        back_populates="job_runner"
+    )
 
     @property
     def infra(self):

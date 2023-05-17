@@ -7,7 +7,6 @@ from .base import Base
 
 
 class Target(Base, table=True):  # type: ignore[call-arg]
-
     # Attributes
     project_name: str = sqlmodel.Field(foreign_key="project.name", primary_key=True)
     query: str
@@ -16,6 +15,6 @@ class Target(Base, table=True):  # type: ignore[call-arg]
     value_field: str
 
     # Relationships
-    project: "Project" = sqlmodel.Relationship(  # type: ignore[name-defined]
+    project: "Project" = sqlmodel.Relationship(  # noqa: F821
         back_populates="target", sa_relationship_kwargs={"uselist": False}
     )

@@ -15,7 +15,9 @@ class StreamProcessor(Base, table=True):  # type: ignore[call-arg]
     url: str
 
     # Relationships
-    projects: list["Project"] = sqlmodel.Relationship(back_populates="stream_processor")  # type: ignore[name-defined]
+    projects: list["Project"] = sqlmodel.Relationship(  # noqa: F821
+        back_populates="stream_processor"
+    )
 
     @property
     def infra(self):
