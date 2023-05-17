@@ -19,13 +19,13 @@ import beaver_sdk
 
 @pytest.fixture(name="session")
 def session_fixture():
-    engine = sqlmodel.create_engine(
+    engine_ = sqlmodel.create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
         poolclass=sqlmodel.pool.StaticPool,
     )
-    sqlmodel.SQLModel.metadata.create_all(engine)
-    with sqlmodel.Session(engine) as session:
+    sqlmodel.SQLModel.metadata.create_all(engine_)
+    with sqlmodel.Session(engine_) as session:
         yield session
 
 
