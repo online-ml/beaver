@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import fastapi
 import sqlmodel as sqlm
 
@@ -19,7 +17,9 @@ def create_feature_set(
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
 
     # Check if the query is valid
-    project.stream_processor.infra.create_view(name=feature_set.name, query=feature_set.query)
+    project.stream_processor.infra.create_view(
+        name=feature_set.name, query=feature_set.query
+    )
 
     feature_set.save(session)
 
@@ -32,11 +32,15 @@ def read_feature_sets(
     limit: int = fastapi.Query(default=100, lte=100),
     session: sqlm.Session = fastapi.Depends(db.get_session),
 ):
-    return session.exec(sqlm.select(models.FeatureSet).offset(offset).limit(limit)).all()
+    return session.exec(
+        sqlm.select(models.FeatureSet).offset(offset).limit(limit)
+    ).all()
 
 
 @router.get("/{name}")  # type: ignore[no-redef]
-def read_feature_set(name: str, session: sqlm.Session = fastapi.Depends(db.get_session)):  # noqa
+def read_feature_set(
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
+):  # noqa
     feature_set = session.get(models.FeatureSet, name)
     if not feature_set:
         raise fastapi.HTTPException(status_code=404, detail="Feature set not found")
@@ -44,7 +48,9 @@ def read_feature_set(name: str, session: sqlm.Session = fastapi.Depends(db.get_s
 
 
 @router.delete("/{name}", status_code=204)  # type: ignore[no-redef]
-def delete_feature_set(name: str, session: sqlm.Session = fastapi.Depends(db.get_session)):
+def delete_feature_set(
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
+):
     feature_set = session.get(models.FeatureSet, name)
     if not feature_set:
         raise fastapi.HTTPException(status_code=404, detail="Feature set not found")

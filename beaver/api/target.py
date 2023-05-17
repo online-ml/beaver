@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import fastapi
 import sqlmodel as sqlm
 
@@ -9,13 +7,17 @@ router = fastapi.APIRouter()
 
 
 @router.post("/", status_code=201)
-def create_target(target: models.Target, session: sqlm.Session = fastapi.Depends(db.get_session)):
+def create_target(
+    target: models.Target, session: sqlm.Session = fastapi.Depends(db.get_session)
+):
     project = session.get(models.Project, target.project_name)
     if not project:
         raise fastapi.HTTPException(status_code=404, detail="Project not found")
 
     # Check if the query is valid
-    project.stream_processor.infra.create_view(name=project.target_view_name, query=target.query)
+    project.stream_processor.infra.create_view(
+        name=project.target_view_name, query=target.query
+    )
 
     target.save(session)
 

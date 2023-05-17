@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import datetime as dt
-
 import dill
+import fastapi
 import sqlmodel
 
 from .base import Base
@@ -21,15 +19,11 @@ class Experiment(Base, table=True):  # type: ignore[call-arg]
     feature_set_name: str = sqlmodel.Field(foreign_key="feature_set.name")
 
     # Relationships
-    project: "Project" = sqlmodel.Relationship(  # noqa: F821, UP037
+    project: "Project" = sqlmodel.Relationship(  # type: ignore[name-defined]
         sa_relationship_kwargs={"uselist": False}
     )
-    feature_set: "FeatureSet" = sqlmodel.Relationship(  # noqa: F821, UP037
-        back_populates="experiments"
-    )
-    jobs: list["Job"] = sqlmodel.Relationship(  # noqa: F821, UP037
-        back_populates="experiment", sa_relationship_kwargs={"cascade": "delete"}
-    )
+    feature_set: "FeatureSet" = sqlmodel.Relationship(back_populates="experiments")  # type: ignore[name-defined]
+    jobs: list["Job"] = sqlmodel.Relationship(back_populates="experiment", sa_relationship_kwargs={"cascade": "delete"})  # type: ignore[name-defined]
 
     def get_model(self):
         return dill.loads(self.model_state)

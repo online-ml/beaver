@@ -38,6 +38,9 @@ class ExperimentOut(pydantic.BaseModel):
     feature_set_name: str
     start_from_top: bool
 
+    class Config:
+        orm_mode = True
+
 
 @router.post("/", status_code=201)
 def create_experiment(
@@ -67,7 +70,9 @@ def create_experiment(
 
 
 @router.delete("/{name}", status_code=204)
-def delete_experiment(name: str, session: sqlm.Session = fastapi.Depends(db.get_session)):
+def delete_experiment(
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
+):
     experiment = session.get(models.Experiment, name)
     if not experiment:
         raise fastapi.HTTPException(status_code=404, detail="Experiment not found")

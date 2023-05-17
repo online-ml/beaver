@@ -21,7 +21,6 @@ websockets = "^10.4"
 httpx = "^0.23.3"
 rq = "^1.14.1"
 redis = "^4.5.5"
-pydantic = "^1.10.7"
 
 [tool.poetry.group.ui.dependencies]
 streamlit = "^1.21.0"
@@ -32,22 +31,16 @@ pytest = "^7.1.3"
 pytest-xdist = "^3.1.0"
 pre-commit = "^3.0.0"
 mypy = "^0.991"
+pydantic = "^1.10.2"
 ipykernel = "^6.22.0"
 scikit-learn = "^1.2.2"
-ruff = "^0.0.267"
-
-[tool.black]
-line-length = 100
-target-version = ['py310']
 
 [tool.ruff]
-select = ["E", "F", "I", "UP"]  # https://beta.ruff.rs/docs/rules/
 line-length = 100
-target-version = 'py310'
 ignore = ["E501"]
 
-[tool.ruff.isort]
-required-imports = ["from __future__ import annotations"]
+[tool.isort]
+profile = "black"
 
 [tool.pytest.ini_options]
 addopts = [
@@ -62,12 +55,6 @@ doctest_optionflags = "NORMALIZE_WHITESPACE NUMBER ELLIPSIS"
 norecursedirs = [
     "ui"
 ]
-
-[[tool.mypy.overrides]]
-module = [
-    "dill.*"
-]
-ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry-core"]

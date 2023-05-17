@@ -1,13 +1,11 @@
-from __future__ import annotations
-
 import uuid
-
 import sqlmodel
 
 from .base import Base
 
 
 class Job(Base, table=True):  # type: ignore[call-arg]
+
     # Attributes
     id: uuid.UUID = sqlmodel.Field(default_factory=uuid.uuid4, primary_key=True)
     n_predictions: int = sqlmodel.Field(default=0)
@@ -15,4 +13,4 @@ class Job(Base, table=True):  # type: ignore[call-arg]
     experiment_name: str = sqlmodel.Field(foreign_key="experiment.name")
 
     # Relationships
-    experiment: "Experiment" = sqlmodel.Relationship(back_populates="jobs")  # noqa: F821, UP037
+    experiment: "Experiment" = sqlmodel.Relationship(back_populates="jobs")  # type: ignore[name-defined]

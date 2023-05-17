@@ -1,10 +1,9 @@
-from __future__ import annotations
-
+import contextlib
 import datetime as dt
+import json
+import psycopg
 import sqlite3
 import typing
-
-import psycopg
 
 
 class StreamProcessor(typing.Protocol):

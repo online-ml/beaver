@@ -1,11 +1,13 @@
-from __future__ import annotations
+import contextlib
+import os
 
+import sqlmodel as sqlm
 import fastapi
 from starlette.middleware.cors import CORSMiddleware
 
+from .settings import settings
 from beaver import api, db
 
-from .settings import settings
 
 app = fastapi.FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_PREFIX}/openapi.json"

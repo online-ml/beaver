@@ -1,14 +1,10 @@
-from __future__ import annotations
-
 import datetime as dt
-import functools
 import json
+import functools
 import pathlib
-
 import pytest
 import sqlmodel
 import sqlmodel.pool
-
 from beaver import enums, infra, logic, models
 
 

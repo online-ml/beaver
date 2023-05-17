@@ -1,17 +1,20 @@
-from __future__ import annotations
-
+import base64
+import json
+import functools
+import collections
 import pathlib
 import urllib.parse
-
-import beaver_sdk
+import dill
 import pytest
+from fastapi.testclient import TestClient
 import sqlmodel
 import sqlmodel.pool
-from fastapi.testclient import TestClient
+import requests
 from river import datasets, linear_model, preprocessing
 
-from beaver.db import get_session
 from beaver.main import app
+from beaver.db import engine, get_session
+import beaver_sdk
 
 
 @pytest.fixture(name="session")

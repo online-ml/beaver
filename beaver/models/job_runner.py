@@ -1,9 +1,7 @@
-from __future__ import annotations
-
+import fastapi
 import sqlmodel
 
-from beaver import enums
-from beaver import infra as _infra
+from beaver import infra as _infra, enums
 
 from .base import Base
 
@@ -17,9 +15,7 @@ class JobRunner(Base, table=True):  # type: ignore[call-arg]
     url: str | None = sqlmodel.Field(default=None)
 
     # Relationships
-    projects: list["Project"] = sqlmodel.Relationship(  # noqa: F821, UP037
-        back_populates="job_runner"
-    )
+    projects: list["Project"] = sqlmodel.Relationship(back_populates="job_runner")  # type: ignore[name-defined]
 
     @property
     def infra(self):
