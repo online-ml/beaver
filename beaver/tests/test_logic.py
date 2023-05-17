@@ -73,7 +73,9 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
 
     # Create a feature set
     if project.stream_processor.protocol == enums.StreamProcessor.sqlite:
-        fs_query = f"SELECT key, created_at, value FROM messages WHERE topic = '{project.name}_features'"
+        fs_query = (
+            f"SELECT key, created_at, value FROM messages WHERE topic = '{project.name}_features'"
+        )
     else:
         raise RuntimeError(
             f"Unsupported stream processor protocol: {project.stream_processor.protocol}"
@@ -87,13 +89,13 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
         value_field="value",
     )
     feature_set.save(session)
-    project.stream_processor.infra.create_view(
-        name=feature_set.name, query=feature_set.query
-    )
+    project.stream_processor.infra.create_view(name=feature_set.name, query=feature_set.query)
 
     # Create a target
     if project.stream_processor.protocol == enums.StreamProcessor.sqlite:
-        target_query = f"SELECT key, created_at, value FROM messages WHERE topic = '{project.name}_targets'"
+        target_query = (
+            f"SELECT key, created_at, value FROM messages WHERE topic = '{project.name}_targets'"
+        )
     else:
         raise RuntimeError(
             f"Unsupported stream processor protocol: {project.stream_processor.protocol}"
@@ -106,9 +108,7 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
         value_field="value",
     )
     target.save(session)
-    project.stream_processor.infra.create_view(
-        name=project.target_view_name, query=target.query
-    )
+    project.stream_processor.infra.create_view(name=project.target_view_name, query=target.query)
 
     # Send data in a particular order
     events = [
@@ -121,9 +121,7 @@ def test_iter_dataset(session, message_bus, stream_processor, job_runner):
     ]
     for ts, key, features, target in events:
         message = infra.Message(
-            topic=f"{project.name}_features"
-            if features is not None
-            else f"{project.name}_targets",
+            topic=f"{project.name}_features" if features is not None else f"{project.name}_targets",
             key=key,
             created_at=ts,
             value=json.dumps(features if features is not None else target),

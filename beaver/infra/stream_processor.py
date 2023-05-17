@@ -43,11 +43,10 @@ class SQLiteStreamProcessor:
             con.execute(f"CREATE VIEW {name} AS {query}")
 
     def stream_view(self, name, since=None):
-        with sqlite3.connect(self.url):
-            query = f"SELECT * FROM {name}"
-            if since:
-                query += f" WHERE ts > '{since}'"
-            yield from self.query(query)
+        query = f"SELECT * FROM {name}"
+        if since:
+            query += f" WHERE ts > '{since}'"
+        yield from self.query(query)
 
 
 class MaterializeStreamProcessor:
