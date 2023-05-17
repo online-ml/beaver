@@ -11,7 +11,11 @@ def create_project(
     project: models.Project, session: sqlm.Session = fastapi.Depends(db.get_session)
 ):
 
-    if not (stream_processor := session.get(models.StreamProcessor, project.stream_processor_name)):
+    if not (
+        stream_processor := session.get(
+            models.StreamProcessor, project.stream_processor_name
+        )
+    ):
         raise fastapi.HTTPException(
             status_code=404,
             detail=f"Stream processor '{project.stream_processor_name}' not found",
@@ -31,22 +35,32 @@ def create_project(
 
     # Bootstrap necessary views
     if stream_processor.protocol == enums.StreamProcessor.materialize:
-        if message_bus.protocol not in {enums.MessageBus.kafka, enums.MessageBus.redpanda}:
+        if message_bus.protocol not in {
+            enums.MessageBus.kafka,
+            enums.MessageBus.redpanda,
+        }:
             raise fastapi.HTTPException(
                 status_code=400,
                 detail="Materialize only supports Kafka and Redpanda message buses",
             )
-        stream_processor.infra.execute(f'DROP VIEW IF EXISTS {project.predictions_topic_name}')
-        stream_processor.infra.execute(f'DROP SOURCE IF EXISTS {project.predictions_topic_name}_src')
-        stream_processor.infra.execute(f"""
+        stream_processor.infra.execute(
+            f"DROP VIEW IF EXISTS {project.predictions_topic_name}"
+        )
+        stream_processor.infra.execute(
+            f"DROP SOURCE IF EXISTS {project.predictions_topic_name}_src"
+        )
+        stream_processor.infra.execute(
+            f"""
         CREATE MATERIALIZED SOURCE {project.predictions_topic_name}_src
         FROM KAFKA BROKER '{message_bus.url}' TOPIC '{project.predictions_topic_name}'
             KEY FORMAT TEXT
             VALUE FORMAT BYTES
             INCLUDE KEY AS key, TIMESTAMP AS ts;
-        """)
+        """
+        )
 
-        stream_processor.infra.execute(f"""
+        stream_processor.infra.execute(
+            f"""
         CREATE VIEW {project.predictions_topic_name} AS (
             SELECT
                 key,
@@ -54,7 +68,8 @@ def create_project(
                 CAST(CONVERT_FROM(data, 'utf8') AS JSONB) AS prediction
             FROM {project.predictions_topic_name}_src
         )
-        """)
+        """
+        )
 
     project.save(session)
 

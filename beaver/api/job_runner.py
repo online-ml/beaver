@@ -33,7 +33,9 @@ def read_job_runner(name: str, session: sqlm.Session = fastapi.Depends(db.get_se
 
 
 @router.delete("/{name}", status_code=204)
-def delete_job_runner(name: str, session: sqlm.Session = fastapi.Depends(db.get_session)):
+def delete_job_runner(
+    name: str, session: sqlm.Session = fastapi.Depends(db.get_session)
+):
     job_runner = session.get(models.JobRunner, name)
     if not job_runner:
         raise fastapi.HTTPException(status_code=404, detail="Job runner not found")
