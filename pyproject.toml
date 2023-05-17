@@ -64,3 +64,4 @@ build-backend = "poetry.core.masonry.api"
 module = [
     "dill.*"
 ]
+ignore_missing_imports = true
