@@ -13,7 +13,7 @@ import requests
 from river import datasets, linear_model, preprocessing
 
 from beaver.main import app
-from beaver.db import engine, get_session
+from beaver.db import get_session
 import beaver_sdk
 
 
