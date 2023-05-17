@@ -1,5 +1,15 @@
 <h1>🦫 Beaver • MLOps for (online) machine learning</h1>
 
+[![Unit tests](https://github.com/online-ml/beaver/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/online-ml/beaver/actions/workflows/unit-tests.yml)
+
+[![Code quality](https://github.com/online-ml/beaver/actions/workflows/code-quality.yml/badge.svg)](https://github.com/online-ml/beaver/actions/workflows/code-quality.yml)
+
+[![Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
+
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
+[![Discord](https://dcbadge.vercel.app/api/server/qNmrKEZMAn)](https://discord.gg/qNmrKEZMAn)
+
 <div align="center" >
   <img src="https://user-images.githubusercontent.com/8095957/202878607-9fa71045-6379-436e-9da9-41209f8b39c2.png" width="25%" align="right" />
 </div>
@@ -20,11 +30,11 @@ Beaver is...
 
 ## 🤱 Getting started
 
-There is a [pre-built image](https://github.com/online-ml/packages/container/package/beaver) you can use 🐳
+There is a [pre-built image](https://ghcr.io/online-ml/beaver) you can pull and run 🐳
 
 ```sh
 docker pull ghcr.io/online-ml/beaver:latest
-docker run beaver
+docker run ghcr.io/online-ml/beaver
 ```
 
 You can also build the provided [`docker-compose.yaml`](docker-compose.yaml) yourself:
