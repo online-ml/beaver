@@ -1,6 +1,5 @@
-version: '3'
+version: "3"
 services:
-
   postgres:
     image: postgres
     environment:
@@ -116,7 +115,6 @@ services:
     command: streamlit run Home.py
     depends_on:
       - api
-
 
 volumes:
   postgres:
