@@ -6,7 +6,7 @@ authors = ["Max Halford <maxhalford25@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-beaver_sdk = { path = "./sdk/" }
+beaver_sdk = { path = "./beaver_sdk/", develop = true }
 python = "^3.10"
 fastapi = "^0.92.0"
 sqlmodel = "^0.0.8"

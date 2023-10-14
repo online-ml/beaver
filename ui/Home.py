@@ -1,13 +1,13 @@
 import os
 import urllib.parse
-import streamlit as st
 import beaver_sdk
+import streamlit as st
+
 
 BEAVER_HOST = os.environ["BEAVER_HOST"]
 BEAVER_SDK = beaver_sdk.Instance(urllib.parse.urljoin(BEAVER_HOST, ":8000"))
 
 if __name__ == "__main__":
-
     st.set_page_config(layout="wide", page_icon="🦫", page_title="Beaver")
     st.title("Beaver")
 

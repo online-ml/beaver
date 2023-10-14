@@ -111,8 +111,8 @@ services:
     ports:
       - 8501:8501
     volumes:
-      - ./ui:/code
-    command: streamlit run Home.py
+      - ./:/code
+    command: poetry run streamlit run ui/Home.py
     depends_on:
       - api
 
