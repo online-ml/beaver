@@ -40,7 +40,7 @@ Beaver is...
 
 ✔ *Opinionated* • it encourages you to [process data with SQL](https://www.ethanrosenthal.com/2022/05/10/database-bundling/) and define models in Python.
 
-✔ [*Interfaces all the way down*](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/) • you can plug in your existing message broker, stream processor, model store, etc. At least, that's the idea.
+✔ [*Interfaces all the way down*](https://vadosware.io/post/building-an-interface-with-one-implementation-is-unquestionably-right/) • you can plug in your existing message broker, stream processor, model store, etc. This is called a [hexagonal architecture](https://www.wikiwand.com/en/Hexagonal_architecture_(software)) in software design.
 
 ✔ *Batteries included* • default infrastructure and monitoring are provided if needed.
 
